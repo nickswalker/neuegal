@@ -1,0 +1,245 @@
+/* =Reset
+-------------------------------------------------------------- */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+body {
+    line-height: 1.5;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: black;
+    
+}
+ol, ul {
+    list-style: none;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+/* = Baseline
+ -------------------------------------------------------------- */
+
+a:link {color:#111;}      /* unvisited link */
+a:visited {color:#111;}  /* visited link */
+a:hover {color:#333;}  /* mouse over link */
+a:active {color:#555;}  /* selected link */
+
+::selection {
+	background: #BFBDA6; /* Safari */
+	}
+::-moz-selection {
+	background: #BFBDA6; /* Firefox */
+}
+body {
+	background-color: #FFF;
+	width: 1075px;
+	margin: 20px auto;
+}
+#content	{
+	margin: 15px 0 24px 0;
+	overflow: auto;
+	height: auto;
+}
+footer	{
+	font-weight: 300;
+	visibility: hidden;
+}
+h1	{
+	float: left;
+	margin: 0;
+	font-size: 36px;
+	font-weight: 600;
+	padding: 0;
+}
+nav	{
+	float: right;
+	display: inline-block;
+	padding-top: 10px;
+}
+nav li	{
+	display: inline-block;
+}
+nav li a	{
+	text-decoration: none;
+	color: black;
+	vertical-align: middle;
+	text-transform: uppercase;
+	font-weight: 100;
+	font-size: 24px;
+	margin-left: 20px;
+}
+header	{
+	overflow: auto;
+	width: 100%;
+	background-color: white;
+	box-sizing: border-box;
+
+}
+img {
+	vertical-align: bottom;
+}
+
+form {
+	display: inline;
+}
+
+
+/* = Contact
+-------------------------------------------------------------- */
+
+.page-bar	{
+	font-size: 24px;
+	font-weight: 700;
+	display: block;
+	box-sizing: border-box;
+	height: 56px;
+	margin: 0 0 35px 0;
+	background-color: black;
+	overflow: auto;
+	position: relative;
+}
+.page-bar a	{
+	display: block;
+	height: 56px;
+	padding: 0 20px;
+	background-color: #CCC;
+}
+.page-bar h2	{
+	text-align: center;
+	float: left;
+}
+.page-bar a, .page-bar h2	{
+	color: white !important;
+	text-decoration: none;
+	line-height: 2.2;
+}
+.page-bar .next	{
+	float: right;
+}
+.page-bar .prev,
+.page-bar .up	{
+	float: left;
+}
+.page-bar .up	{
+margin-right: 20px;
+
+}
+/* Thumbnail */
+.gallery-entry	{
+	display: inline-block;
+	overflow: auto;
+	margin: 0 50px 45px 0;
+	float: left;
+}
+.gallery-entry.folder	{
+	margin-bottom: 20px;
+}
+.gallery-entry:nth-of-type(5n)	{
+	margin-right: 0;
+}
+
+.gallery-entry a	{
+	display: block;
+	position: relative;
+	overflow: hidden;
+	width: 175px;
+	height: 175px;
+	background-color: #CCC;
+}
+.gallery-entry span	{
+	display: block;
+	width: 175px;
+	height: 24px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.gallery-entry a:hover img {
+	opacity: 0.4; 
+}
+.gallery-entry a:before {
+	content: " ";
+	background-image: url(media/expand.svg);
+	background-size: contain;
+	display: block;
+	font-size: 40px;
+	line-height: 1em;
+	height: 1em;
+	width: 1em;
+	text-align: center;
+	opacity: 0;
+	color: #fff;
+	font-weight: bold;
+	
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	z-index: 1;
+	
+	margin: -0.5em 0 0 -0.5em;
+}
+.gallery-entry.folder a:before {
+	content: " ";
+	background-image: url(media/folder.svg);
+}
+.gallery-entry:hover a:before	{
+	opacity: 1;
+}
+img,a {
+	-webkit-transition: opacity 0.2s;  /* Saf3.2+, Chrome */
+	-moz-transition: opacity 0.2s ;  /* FF4+ */
+	-ms-transition: opacity 0.2s ;  /* IE10 */
+	-o-transition: opacity 0.2s ;  /* Opera 10.5+ */
+	transition: opacity 0.2s;
+}
+a:disabled	{
+	pointer-events: none;
+	color: red !important;
+}
+
+.fancybox-nav {
+    width: 60px;       
+}
+
+.fancybox-nav span {
+    /* visibility: visible; */
+}
+
+.fancybox-next {
+    right: -100px;
+}
+
+.fancybox-prev {
+    left: -100px;
+}
