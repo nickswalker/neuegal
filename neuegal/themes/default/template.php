@@ -31,11 +31,16 @@
 	});
 </script>
 <link rel="stylesheet" href="/style.css" />
-<title><?php $this->showTitle(); ?></title>
+<title><?php if($this->vars['dir_req']!=''){ 
+				echo $this->vars['page_title'] . ' | '. $this->settings['general']['site_name'];
+				} 
+			else{ 
+				echo $this->settings['general']['site_name'];
+				} ?></title>
 </head>
 <body>
 <div id="content">
-<?php $this->showPage($this->settings['general']['page_title_format']); ?>
+<?php $this->showPage(); ?>
 </div>
 </body>
 </html>

@@ -4,23 +4,26 @@
 		echo '<a href="?'. $this->vars['dir_parent'] .'" class="up">^</a>';
 	}
 	?>
-	<h2><?php $this->showPage($this->settings['general']['page_title_format']); ?></h2>
+	<h2><?php if($this->vars['dir_req']!=''){ 
+				echo $this->vars['page_title'];
+				} 
+			else{ 
+				echo $this->settings['general']['site_name'];
+				} ?>
+	</h2>
 </div>
 <?php $image = '
 <figure class="gallery-entry">
-	<a class="thumb-container fancybox" data-fancybox-group="gallery" href="{{Link}}" style="width:   {{Thumb-size}}; height:   {{Thumb-size}};">
-		<img src="{{Thumb-URL}}" alt="{{Image-Title}}" />
+	<a class="thumb-container fancybox" data-fancybox-group="gallery" href="{{Link}}" style="width:   {{ThumbSize}}; height:   {{ThumbSize}};">
+		<img src="{{ThumbURL}}" alt="{{ImageTitle}}" />
 	</a>
 </figure>
 ';
 $folder = '
 <figure class="gallery-entry folder">
-	<a href="{{Link}}" style="width:   {{Thumb-size}}; height:   {{Thumb-size}};">
-		<img src="{{Thumb-URL}}" alt="{{Folder-Title}}"/>
+	<a href="{{Link}}" style="width:   {{ThumbSize}}; height:   {{ThumbSize}};">
+		<img src="{{ThumbURL}}" alt="{{FolderTitle}}"/>
 	</a>
-	<span>{{Folder-Title}}</span>
 </figure>';
-if(isset($this->$dir['description'])) {
-	echo $this->$dir['description'];
-	}
+echo $dir['description'];
 $this->showGallery($folder,$image); ?>

@@ -138,6 +138,7 @@ form {
 .page-bar h2	{
 	text-align: center;
 	float: left;
+	margin-left: 20px;
 }
 .page-bar a, .page-bar h2	{
 	color: white !important;
@@ -152,7 +153,6 @@ form {
 	float: left;
 }
 .page-bar .up	{
-margin-right: 20px;
 
 }
 /* Thumbnail */
@@ -183,6 +183,9 @@ margin-right: 20px;
 	height: 24px;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	text-align: center;
+	margin-top: 10px;
+	font-weight: 300;
 }
 
 .gallery-entry a:hover img {

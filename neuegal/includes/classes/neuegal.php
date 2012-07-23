@@ -21,29 +21,28 @@ class NeueGal
 		$this->vars['total_time'] = ($this->vars['end_time'] - $this->vars['start_time']);
 	}
 
-	function loadSettings($theme = false) {
-    	//Set theme to true if you want to retrieve theme settings
-		
-		if ($theme == true)
-		{
+	function loadSettings() {
+	
+
+			if (!is_file('neuegal/settings.php'))
+			{
+			} else {
+				require('neuegal/settings.php');
+			}
+			
+
 			if (!is_file('neuegal/themes/' . $this->settings['general']['theme'] . '/settings.php'))
 			{
 				return false;
 			} else {
+				
 				require('neuegal/themes/' . $this->settings['general']['theme'] . '/settings.php');
 				$this->setThumbSize();
 				return true;
 			}
-		} else {
-			if (!is_file('neuegal/settings.php'))
-			{
-				return false;
-			} else {
-				require('neuegal/settings.php');
-				$this->setThumbSize();
-				return true;
-			}
-		}
+
+
+
     }
 
 	function loadVars() {
@@ -211,7 +210,7 @@ class NeueGal
 		$output = array();
 		
 		if (is_dir($full_dir)) {
-			if ($cached == true && is_file($cache_folder . $dir . 'cache.xml')) {
+			if ($cached == true && $this->settings['advanced']['use_file_cache'] == true && is_file($cache_folder . $dir . 'cache.xml')) {
 				if (((time() - filemtime($cache_folder . $dir . 'cache.xml')) < $this->settings['advanced']['expire_file_cache']) || $forced_cache == true) {
 					$xml = new SimpleXMLElement(file_get_contents($cache_folder . $dir . 'cache.xml'));
 	
@@ -223,7 +222,6 @@ class NeueGal
 						{
 							$fd[$x]['full_path'] = (string)$dirs->path;
 							$fd[$x]['dir'] = (string)$dirs->dirname;
-							$fd[$x]['description'] = (string)$dirs->description;
 							
 							$x++;
 						}
@@ -241,7 +239,6 @@ class NeueGal
 							$ff[$x]['data'][1] = (integer)$files->data->height;
 							$ff[$x]['data'][2] = (integer)$files->data->imagetype;
 							$ff[$x]['data'][3] = (string)$files->data->sizetext;
-							if (isset($files->description)) { $ff[$x]['description'] = (string)$files->description; }
 							
 							$x++;
 						}
@@ -255,26 +252,17 @@ class NeueGal
 						while (($item = readdir($dh)) !== false) {
 							if (filetype($full_dir . $item) == 'dir' && $type != 'file' && $this->checkList($item, $this->vars['folder_blacklist']) == false)
 							{
-								$temp_description = null;
-								if(file_exists($full_dir . $item.'/description.txt')){
-									$temp_description= file_get_contents($full_dir . $item.'/description.txt');
-								}
-							
 								$fd[] = array(
 									'full_path'=>$dir . $item,
-									'dir'=>$item,
-									'description'=> $temp_description
+									'dir'=>$item
 								);
 								
-								
-
 								sort($fd);
 							} else if (filetype($full_dir . $item) == 'file' && $type != 'dir' && $this->checkList($item, $this->vars['file_blacklist']) == false && $this->checkList($this->pathInfo($item, 'file_ext'), $this->vars['file_types']) == true) {
 								$ff[] = array(
 									'full_path'=>$dir . $item,
 									'file'=>$item,
-									'data'=>getimagesize($full_dir . $item),
-									'description'=> $this->getImageDescription($item).'blah'
+									'data'=>getimagesize($full_dir . $item)
 								);
 								
 								sort($ff);
@@ -424,42 +412,41 @@ class NeueGal
 		
 		if ($this->settings['advanced']['use_gd'] == true)
 		{		
-			if ($this->settings['advanced']['use_gd_cache'] == true)
+
+			$use_cache = false;
+			
+			if (!is_file($cache_folder . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '_' . $this->vars['thumb_size'] .  '.' . $file_ext))
 			{
+				//Cached image does not exist, create if possible
 				$use_cache = false;
+			} else {
+				//Cached image exists, check if correct image size
+				list($thumb_width, $thumb_height) = getimagesize($cache_folder . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '_' . $this->vars['thumb_size'] .  '.' . $file_ext);
 				
-				if (!is_file($cache_folder . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '_' . $this->vars['thumb_size'] .  '.' . $file_ext))
+				$thumb_size = $this->resizedSize($file_data['data'][0], $file_data['data'][1]);
+				
+				if ($thumb_size[0] != $thumb_width and $thumb_size[1] != $thumb_height)
 				{
-					//Cached image does not exist, create if possible
+					//Cached image does not match the current thumbnail size settings, create new thumbnail
 					$use_cache = false;
 				} else {
-					//Cached image exists, check if correct image size
-					list($thumb_width, $thumb_height) = getimagesize($cache_folder . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '_' . $this->vars['thumb_size'] .  '.' . $file_ext);
-					
-					$thumb_size = $this->resizedSize($file_data['data'][0], $file_data['data'][1]);
-					
-					if ($thumb_size[0] != $thumb_width and $thumb_size[1] != $thumb_height)
-					{
-						//Cached image does not match the current thumbnail size settings, create new thumbnail
-						$use_cache = false;
-					} else {
-						//Cached image does not need updating, use cached thumbnail
-						$use_cache = true;
-					}
+					//Cached image does not need updating, use cached thumbnail
+					$use_cache = true;
 				}
-				
-				if ($use_cache == true)
-				{
-					$img_url = $cache_folder . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '_' . $this->vars['thumb_size'] .  '.' . $file_ext;
-				} 
-				else {
-					$img_url = '?thumb=' . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '.' . $file_ext . '&size=' . $this->vars['thumb_size'];
-				}
+			}
+			
+			if ($use_cache == true)
+			{
+				$img_url = $cache_folder . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '_' . $this->vars['thumb_size'] .  '.' . $file_ext;
 			} 
 			else {
 				$img_url = '?thumb=' . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '.' . $file_ext . '&size=' . $this->vars['thumb_size'];
 			}
 		} 
+		else {
+			$img_url = '?thumb=' . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '.' . $file_ext . '&size=' . $this->vars['thumb_size'];
+		}
+
 		
 		if(file_exists($this->fixPath($this->settings['advanced']['thumbs_folder']) . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '.' . $this->settings['general']['thumb_file_ext'])){
 				$img_url = $this->fixPath($this->settings['advanced']['thumbs_folder']) . $dir . $this->pathInfo($file_data['full_path'], 'file_name') . '.' . $this->settings['general']['thumb_file_ext'];
@@ -562,9 +549,6 @@ class NeueGal
 		
 	}
 	
-
-
-	
 	function outputSettingsArray() {
 		echo '<pre>';
 		print_r($this->settings);
@@ -577,43 +561,31 @@ class NeueGal
 		echo '</pre>';
 	}
 	//!Display 
-	function showError($format = 0) {
-		//0 = Output error
-		//1 = Return error as string	
-
-		if ($format == 0)
-		{
-			echo $this->vars['error'];
-		} else if ($format == 1) {
-			return $this->vars['error'];
-		}
+	function showError() {
+		echo $this->vars['error'];
 	}
 
 	
 	
-	function showFooter($footer) {
+	function showLoadInfo($loadInfoFormat) {
 		
 		$this->endTimer();
 		
 		$search = array(
-			'{{site_name}}',
-			'{{current_item}}',
-			'{{version}}',
-			'{{load_time}}'
+			'{{Version}}',
+			'{{LoadTime}}'
 			);
 		$replace = array(
-			$this->settings['general']['site_name'],
-			$this->vars['page_title'],
 			$this->vars['version'],
 			number_format($this->vars['total_time'], 7)
 			);
 		
-			echo str_replace($search, $replace, $footer);
+			echo str_replace($search, $replace, $loadInfoFormat);
 	
 
 	}
 	
-	function showGallery($folder, $image)
+	function showGallery($folderFormat, $imageFormat)
 	{
 		if ($this->vars['dir_req'] != '')
 		{
@@ -628,44 +600,40 @@ class NeueGal
 			{	
 				if (is_dir($request . $dir['dir']))
 				{
-					if ($this->settings['general']['thumb_folder_show_thumbs'] == true) {
-						//Grab the directory info
-						if ($this->settings['general']['thumb_folder_use_cache_only'] == true) {
-							$dir_data = $this->getDirData($request . $dir['dir'], 'both', true, true);
-						} 
-						else {
-							$dir_data = $this->getDirData($request . $dir['dir'], 'both', true);
-						}
-						
-						if ($this->settings['general']['thumb_folder_shuffle'] == true) { shuffle($dir_data['file']); }
-						
-						//Grab the first one as a thumb						
-						if ($dir_data['file']) {
-							$temp_dir_data = $dir_data['file'][0];
-							$img_url = $this->genThumbURL($request . $dir['dir'], $temp_dir_data);
-						}
-						else {
-							$img_url = $this->showThemeURL(1) . 'images/no_images.png';
-						}
+					//Grab the directory info
+					if ($this->settings['general']['thumb_folder_use_cache_only'] == true) {
+						$dir_data = $this->getDirData($request . $dir['dir'], 'both', true, true);
+					} 
+					else {
+						$dir_data = $this->getDirData($request . $dir['dir'], 'both', true);
+					}
+					
+					if ($this->settings['general']['thumb_folder_shuffle'] == true) { shuffle($dir_data['file']); }
+					
+					//Grab the first one as a thumb						
+					if ($dir_data['file']) {
+						$temp_dir_data = $dir_data['file'][0];
+						$img_url = $this->genThumbURL($request . $dir['dir'], $temp_dir_data);
 					}
 					else {
 						$img_url = $this->showThemeURL(1) . 'images/no_images.png';
 					}
+
 				}
 				else {
 					$img_url = $this->showThemeURL(1) . 'images/no_images.png';
 				}
 				
 				$search = array(
-					'{{Thumb-size}}',
-					'{{Folder-Title}}',
+					'{{ThumbSize}}',
+					'{{FolderTitle}}',
 					'{{Link}}',
-					'{{Thumb-URL}}',
-					'{{Theme-Path}}',
+					'{{ThumbURL}}',
+					'{{ThemePath}}',
 					'{{Description}}'
 					);
 				$replace = array(
-					$this->settings['general']['thumb_size'][$this->vars['thumb_size']] . 'px',
+					$this->settings['general']['thumb_size'] . 'px',
 					$dir['dir'],
 					'?'.$request .str_replace( " ", "-", $dir['dir']),
 					$this->escapeString($img_url),
@@ -673,7 +641,7 @@ class NeueGal
 					$dir['description']
 					);
 
-					echo str_replace($search, $replace, $folder);
+					echo str_replace($search, $replace, $folderFormat);
 			}
 		}
 		
@@ -686,38 +654,30 @@ class NeueGal
 				$url = $request . $file['file'];
 				
 			$search = array(
-			'{{Thumb-size}}',
-			'{{Image-Title}}',
+			'{{ThumbSize}}',
+			'{{ImageTitle}}',
 			'{{Link}}',
-			'{{Thumb-URL}}',
-			'{{Theme-Path}}'
+			'{{ThumbURL}}',
+			'{{ThemePath}}'
 			);
 		$replace = array(
-			$this->settings['general']['thumb_size'][$this->vars['thumb_size']] . 'px',
+			$this->settings['general']['thumb_size'] . 'px',
 			$this->cleanFileName($file['file']),
 			$url,
 			$this->escapeString($img_url),
 			$this->showThemeURL(1)
 			);
 
-		echo str_replace($search, $replace, $image);
+		echo str_replace($search, $replace, $imageFormat);
 		
 			}
 		}
 		
 	}
 	
-	
-	function showUpFolderURL($format = 0)
+	function showUpFolderURL()
 	{
-		//0 = Output url
-		//1 = Return url as string	
-		if ($format == 0)
-		{
-			echo '?' . $this->pathInfo($_GET['file'], 'dir_path');
-		} else if ($format == 1) {
-			return '?' . $this->pathInfo($_GET['file'], 'dir_path');
-		}
+		echo '?' . $this->pathInfo($_GET['file'], 'dir_path');
 	}
 	
 	function showThemeURL($format = 0)
@@ -732,20 +692,18 @@ class NeueGal
 		}
 	}
 	
-	function showTitle($title)
+	function showTitle($titleFormat)
 	{
-		//0 = Output 
-		//1 = Return as string	
 		$search = array(
-			'{{S}}',
-			'{{P}}'
+			'{{SiteName}}',
+			'{{PageTitle}}'
 			);
 		$replace = array(
 			$this->settings['general']['site_name'],
 			$this->vars['page_title']
 			);
 		
-		echo str_replace($search, $replace, $title);
+		echo str_replace($search, $replace, $titleFormat);
 	
 	}
 	
@@ -807,12 +765,7 @@ class NeueGal
 		ini_set('zlib.output_compression', $this->settings['advanced']['use_gzip_compression']);
 		ini_set('zlib.output_compression_level', $this->settings['advanced']['gzip_compression_level']);
 		
-		//Theme Specific Settings
-		if ($this->settings['advanced']['allow_theme_settings'] == true)
-		{
-			$this->loadSettings(true);
-		}
-		
+	
 		//Load Variables
 		$this->loadVars();
 		
@@ -838,7 +791,8 @@ class NeueGal
 			if ($this->vars['dir_req'] == '' || $this->checkExploit('/' . $this->vars['dir_req']) == true) {
 				if (!$this->getDir($dir_req))
 				{
-					$this->vars['error'] = 'Folder doesn\'t exist';
+					echo 'dir'.$dir_req;
+					$this->vars['error'] = 'Folder doesn\'t exist A';
 					$this->vars['page_title'] = 'Error';
 					$this->vars['page_requested'] = 'error';
 				}
@@ -849,11 +803,10 @@ class NeueGal
 				}
 			} 
 			else {
-				$this->vars['error'] = 'Folder doesn\'t exist';
+				$this->vars['error'] = 'Folder doesn\'t exist B';
 				$this->vars['page_title'] = 'Error';
 				$this->vars['page_requested'] = 'error';
 			}
-			
 			require('neuegal/themes/' . $this->settings['general']['theme'] . '/template.php');
 			
 			if ($this->settings['advanced']['debug_show_all'] == true)
