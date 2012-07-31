@@ -24,9 +24,7 @@
 			nextEffect: 'fade',
 			loop: false,
 			closeBtn: false,
-			helpers : {
-            	title : null            
-            }      
+			    
 		});
 	});
 </script>

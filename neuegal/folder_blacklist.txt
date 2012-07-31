@@ -1,1 +1,1 @@
-.,..,cache,neuegal,media,cgi-bin
+.,..,cache,neuegal,media,cgi-bin,.git

@@ -11,10 +11,14 @@
 				echo $this->settings['general']['site_name'];
 				} ?>
 	</h2>
+	<?php if(isset($this->vars['description'])){
+		echo('<span class="description">'. $this->vars['description'] .'</span>');
+
+	} ?>
 </div>
 <?php $image = '
 <figure class="gallery-entry">
-	<a class="thumb-container fancybox" data-fancybox-group="gallery" href="{{Link}}" style="width:   {{ThumbSize}}; height:   {{ThumbSize}};">
+	<a title="{{ImageTitle}} {{Description}}" class="thumb-container fancybox" data-fancybox-group="gallery" href="{{Link}}" style="width:   {{ThumbSize}}; height:   {{ThumbSize}};">
 		<img src="{{ThumbURL}}" alt="{{ImageTitle}}" />
 	</a>
 </figure>

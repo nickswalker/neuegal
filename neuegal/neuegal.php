@@ -252,17 +252,28 @@ class NeueGal
 						while (($item = readdir($dh)) !== false) {
 							if (filetype($full_dir . $item) == 'dir' && $type != 'file' && $this->checkList($item, $this->vars['folder_blacklist']) == false)
 							{
+							$temp_description= '';
+							if(file_exists($full_dir . 'description.txt')){
+								$temp_description = file_get_contents($full_dir . 'description.txt' );
+							}
 								$fd[] = array(
 									'full_path'=>$dir . $item,
-									'dir'=>$item
+									'dir'=>$item,
+									'description'=> $temp_description
 								);
 								
 								sort($fd);
 							} else if (filetype($full_dir . $item) == 'file' && $type != 'dir' && $this->checkList($item, $this->vars['file_blacklist']) == false && $this->checkList($this->pathInfo($item, 'file_ext'), $this->vars['file_types']) == true) {
+							$temp_description= '';
+							if(file_exists($full_dir . basename($item,'.jpg').'.txt' )){
+								
+								$temp_description = file_get_contents($full_dir . basename($item,'.jpg').'.txt' );
+							}
 								$ff[] = array(
 									'full_path'=>$dir . $item,
 									'file'=>$item,
-									'data'=>getimagesize($full_dir . $item)
+									'data'=>getimagesize($full_dir . $item),
+									'description'=>$temp_description
 								);
 								
 								sort($ff);
@@ -658,14 +669,16 @@ class NeueGal
 			'{{ImageTitle}}',
 			'{{Link}}',
 			'{{ThumbURL}}',
-			'{{ThemePath}}'
+			'{{ThemePath}}',
+			'{{Description}}'
 			);
 		$replace = array(
 			$this->settings['general']['thumb_size'] . 'px',
 			$this->cleanFileName($file['file']),
 			$url,
 			$this->escapeString($img_url),
-			$this->showThemeURL(1)
+			$this->showThemeURL(1),
+			$file['description']
 			);
 
 		echo str_replace($search, $replace, $imageFormat);

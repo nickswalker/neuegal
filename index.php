@@ -22,7 +22,7 @@ You should have received a copy of the GNU General Public License
 along with NeueGal. If not, see <http://www.gnu.org/licenses/>.
 */
 
-require('neuegal/includes/classes/neuegal.php');
+require('neuegal/neuegal.php');
 
 $neuegal = new NeueGal;
 
