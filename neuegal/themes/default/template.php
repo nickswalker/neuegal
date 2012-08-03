@@ -2,13 +2,12 @@
 <html>
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"> -->
+<meta charset= "UTF-8">
 
 <link rel="stylesheet" href="neuegal/scripts/fancybox/jquery.fancybox.css">
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <?php
-	echo "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js\"></script>\n";
 	echo "<link rel=\"stylesheet\" href=\"" . $this->showThemeURL(1) . "gallery.css\">\n";
 ?>
 <script src="neuegal/scripts/fancybox/jquery.fancybox.js"></script>

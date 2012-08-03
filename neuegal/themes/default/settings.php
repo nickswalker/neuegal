@@ -1,15 +1,16 @@
 <?php
 /* General */
 
-$this->settings['general']['thumb_size']= 175 ; //Thumbnail will not exceed this value in either width or height (pixels).
-$this->settings['general']['page_title_format'] = '{{P}} | {{S}}'; //Title format ([S] = Site name, [P] = Page title).
+$this->settings['general']['thumb_size']= 175 ; 
+$this->settings['general']['page_title_format'] = '{{P}} | {{S}}';
 
-$this->settings['general']['thumb_folder_show_thumbs'] = true; //Show images from within the folder as the folder's thumbnail (Can drastically decrease performance if there are a lot of folders (or images within folders) and file cache is turned off).
+$this->settings['general']['thumb_folder_show_thumbs'] = true;
 $this->settings['general']['thumb_folder_shuffle'] = false; 
+$this->settings['general']['thumb_folder_use_cache_only'] = false; 
 
 /* Specific Theme Settings */
 
+$this->settings['theme']['info_link'] = 'http://nickswalker.github.com/neuegal/'; 
 
-$this->settings['general']['thumb_folder_use_cache_only'] = false; //Force cache data only, if no cache exists then no thumbnails are shown for the folder (Can drastically improve performance on large folders) (Ignores cache expire setting).
 
 ?>

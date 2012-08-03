@@ -15,6 +15,11 @@
 		echo('<span class="description">'. $this->vars['description'] .'</span>');
 
 	} ?>
+	
+	
+	<?php if(isset($this->settings['theme']['info_link'])){
+		echo('<a class="info-link" href="'. $this->settings['theme']['info_link'] .'">?</a>');
+	} ?>
 </div>
 <?php $image = '
 <figure class="gallery-entry">
@@ -25,7 +30,7 @@
 ';
 $folder = '
 <figure class="gallery-entry folder">
-	<a href="{{Link}}" style="width:   {{ThumbSize}}; height:   {{ThumbSize}};">
+	<a href="{{Link}}" style="width: {{ThumbSize}}; height: {{ThumbSize}};">
 		<img src="{{ThumbURL}}" alt="{{FolderTitle}}"/>
 	</a>
 </figure>';

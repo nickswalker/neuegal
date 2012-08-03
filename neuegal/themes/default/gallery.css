@@ -64,7 +64,7 @@ a:active {color:#555;}  /* selected link */
 body {
 	background-color: #000;
 	width: 1075px;
-	margin: 35px auto;
+	margin: 45px auto;
 }
 #content	{
 	margin: 15px 0 24px 0;
@@ -124,7 +124,7 @@ form {
 	display: block;
 	height: 56px
 	box-sizing: border-box;
-	margin: 0 0 35px 0;
+	margin: 0 0 45px 0;
 	background-color: #666;
 	overflow: auto;
 	position: relative;
@@ -135,6 +135,7 @@ form {
 	padding: 0 20px;
 	background-color: #ddd;
 	color: #666;
+	height: 100%;
 }
 .page-bar h2	{
 	float: left;
@@ -155,8 +156,10 @@ form {
 	text-decoration: none;
 	line-height: 2.2;
 }
-.page-bar .next	{
+.page-bar .info-link	{
 	float: right;
+	background-size: contain;
+	
 }
 .page-bar .up	{
 	float: left;
