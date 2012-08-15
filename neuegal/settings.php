@@ -18,8 +18,7 @@ $this->settings['advanced']['debug_show_all'] = false;
 
 $this->settings['advanced']['cyrillic_support'] = true;
 
-$this->settings['advanced']['use_gzip_compression'] = 'on';
-$this->settings['advanced']['gzip_compression_level'] = 1;
+
 
 $this->settings['advanced']['use_gd'] = true;
 $this->settings['advanced']['use_gd_cache'] = true;
