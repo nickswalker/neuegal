@@ -22,7 +22,8 @@ to display them just like you'd imagine. Note however that directory information
 cache.xml to get the server to regenerate the directory information.
 
 ####Adding Image Descriptions
-Image descriptions are dynamically retrieved from the JPEG Comment header in the file if it is set.
+Image descriptions are dynamically retrieved from a `.txt` file of the same name as the image. So, if your image is
+"Grey Rock.png", the description text file would just be "Grey Rock.png".
 
 ####Adding Folder Descriptions
 Folder descriptions are dynamically retrieved from a `description.txt` file in a given directory .
@@ -43,65 +44,59 @@ are part of the NeueGal class under the settings object and can be accessed in t
 ###General
 <table>
   <tr>
-    <td>`site_name`</td><td>Name of site</td>
+    <td>site_name</td><td>Name of site</td>
   </tr>
   <tr>
-    <td>`theme`</td><td>Folder name of the theme to use</td>
+    <td>theme</td><td>Folder name of the theme to use</td>
   </tr>
   <tr>
-    <td>`thumb_file_ext`</td><td>File extention of manually created and uploaded thumbnails</td>
+    <td>thumb_file_ext</td><td>File extention of manually created and uploaded thumbnails</td>
   </tr>
   <tr>
-    <td>`thumb_folder_show_thumbs`</td><td>Show a thumbnail for folders</td>
+    <td>thumb_folder_show_thumbs</td><td>Show a thumbnail for folders</td>
   </tr>
   <tr>
-    <td>`thumb_folder_shuffle`</td><td>Boolean. Whether folder thumbnails should randomized or not</td>
+    <td>thumb_folder_shuffle</td><td>Boolean. Whether folder thumbnails should randomized or not</td>
   </tr>
   <tr>
-    <td>`thumb_size`</td><td>Max width or height of generated thumbnail</td>
+    <td>thumb_size</td><td>Max width or height of generated thumbnail</td>
   </tr>
   <tr>
-    <td>`thumb_folder_use_cache_only`</td><td>Force cache data only, if no cache exists then no thumbnails are shown for the folder (Can drastically improve performance on large folders)</td>
+    <td>thumb_folder_use_cache_only</td><td>Force cache data only, if no cache exists then no thumbnails are shown for the folder (Can drastically improve performance on large folders)</td>
   </tr>
 </table>
 
 ###Advanced
 <table>
   <tr>
-    <td>`debug_mode`</td><td>Boolean. Display errors and notices</td>
+    <td>debug_mode</td><td>Boolean. Display errors and notices</td>
   </tr>
   <tr>
-    <td>`debug_show_all`</td><td>Boolean. Shows all variables and information regarding current page</td>
+    <td>debug_show_all</td><td>Boolean. Shows all variables and information regarding current page</td>
   </tr>
   <tr>
-    <td>`cyrillic_support`</td><td>Boolean. Enable support for cyrillic characters in folder names. Also helps with certain symbols</td>
+    <td>cyrillic_support</td><td>Boolean. Enable support for cyrillic characters in folder names. Also helps with certain symbols</td>
   </tr>
   <tr>
-    <td>`use_gzip_compression`</td><td>'on' or 'off'. Enable gzip compression of html where possible</td>
+    <td>use_gd</td><td>Boolean. Enable GD thumbnail creation (dynamic thumbnails)</td>
   </tr>
   <tr>
-    <td>`gzip_compression_level`</td><td>0 to 9 (9 being most compression)</td>
+    <td>use_gd_cache</td><td>Boolean. Cache thumbnails so they aren't recreated on every page load</td>
   </tr>
   <tr>
-    <td>`use_gd`</td><td>Boolean. Enable GD thumbnail creation (dynamic thumbnails)</td>
+    <td>jpeg_quality</td><td>0 to 100. JPEG thumbnail quality</td>
   </tr>
   <tr>
-    <td>`use_gd_cache`</td><td>Boolean. Cache thumbnails so they aren't recreated on every page load</td>
+    <td>gd_cache_expire</td><td>Seconds till expire</td>
   </tr>
   <tr>
-    <td>`jpeg_quality`</td><td>0 to 100. JPEG thumbnail quality</td>
+    <td>expire_file_cache</td><td>Seconds till expire</td>
   </tr>
   <tr>
-    <td>`gd_cache_expire`</td><td>Seconds till expire</td>
+    <td>cache_folder</td><td>Where you want to store your cached xml and thumbnail files. Relative to NeueGal install folder</td>
   </tr>
   <tr>
-    <td>`expire_file_cache`</td><td>Seconds till expire</td>
-  </tr>
-  <tr>
-    <td>`cache_folder`</td><td>Where you want to store your cached xml and thumbnail files. Relative to NeueGal install folder</td>
-  </tr>
-  <tr>
-    <td>`thumbs_folder`</td><td>Where you want to store your non GD thumbnails. Relative to NeueGal install folder</td>
+    <td>thumbs_folder</td><td>Where you want to store your non GD thumbnails. Relative to NeueGal install folder</td>
   </tr>
 </table>
 
@@ -132,7 +127,7 @@ theme files with `$this->` as a prefix.
     <td>{{ThemePath}}</td><td>Path to current theme</td>
   </tr>
   <tr>
-    <td>{{Description}}</td><td>Any text in a file name `description.txt` in the directory</td>
+    <td>{{Description}}</td><td>Any text in a file named `description.txt` in the directory</td>
   </tr>
 </table>
 ####`$imageFormat`
@@ -153,7 +148,7 @@ theme files with `$this->` as a prefix.
     <td>{{ThemePath}}</td><td>Path to current theme</td>
   </tr>
   <tr>
-    <td>{{Description}}</td><td>Description included in the JPEG Comment header for image.</td>
+    <td>{{Description}}</td><td>Any text in a .txt file of the same name as the image.</td>
   </tr>
 </table>
 
@@ -176,10 +171,6 @@ theme files with `$this->` as a prefix.
     <td>{{PageTitle}}</td><td>Name of current directory</td>
   </tr>
 </table>
-###`showError()`
-Just outputs error string.
-###`showError()`
-Just outputs link to the parent directory.
 
 Issues
 ------
