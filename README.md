@@ -6,7 +6,6 @@ which aims to make it easy to create simple galleries for photography portfolios
 bare bones Apache index for photos, except it looks great out of the box and has simple to use theming support so you 
 can integrate it with your existing designs. Comes with [Fancybox](http://fancyapps.com/fancybox/) built in.
 
-More information and examples: http://nickswalker.github.com/neuegal/
 
 Installation
 ------
