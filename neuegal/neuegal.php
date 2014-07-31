@@ -439,9 +439,11 @@ class NeueGal
 		$filename = pathinfo($path)['filename'];
 	
 		$directory = pathinfo($path)['dirname'];
+		
 		if($directory === "."){
 			$directory = "";
 		}
+		$directory = $this->normalizePath($directory);
 		$fileExtension = pathinfo($path)['extension'];
 
 		$cacheFolder = $this->vars['dir']['cache_from_root'] . $directory;
