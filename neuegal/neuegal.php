@@ -56,10 +56,9 @@ class NeueGal
 		
 		// Populates $this->vars['file_list'] and $this->vars['folder_list']
 		$this->loadDirectoryInformation($this->vars['dir']['current']);
-		var_dump($this->vars);
 	}
 	function loadDirectoryInformation($dir) {		
-		if ($dir_data = $this->getDirData($dir)) {
+		if ($dir_data = $this->getDirectoryData($dir)) {
 			if (count($dir_data['file']) > 0) { $this->vars['file_list'] = $dir_data['file']; }
 			if (count($dir_data['dir']) > 0) { $this->vars['folder_list'] = $dir_data['dir']; }
 	
@@ -130,20 +129,19 @@ class NeueGal
 //Content Generators
 	function makeFile($file){
 		$imageFormat = $this->settings['theme']['image'];
-
 		$search = array(
 			'{{ThumbSize}}',
-			'{{ImageTitle}}',
-			'{{Link}}',
-			'{{ThumbURL}}',
+			'{{Title}}',
+			'{{Path}}',
+			'{{ThumbPath}}',
 			'{{Description}}'
 		);
 		
 		$replace = array(
 			$this->settings['general']['thumb_size'] . 'px',
-			$file['name'],
+			pathinfo($file['name'])['filename'],
 			$file['path'],
-			$this->generateThumbURL($file['path']),
+			$this->generateThumbnailURL($file['path']),
 			"Placeholder Description"//$file['description']
 		);
 
@@ -152,95 +150,92 @@ class NeueGal
 	function makeFolder($directory){
 		$folderFormat = $this->settings['theme']['folder']; 
 		$fullPathToDir = $directory['path'];
-			if (is_dir($fullPathToDir)){
-				//Grab the directory info
-				$dir_data = $this->getDirData($fullPathToDir);
-				
-				if ($this->settings['general']['thumb_folder_shuffle'] == true) { shuffle($dir_data['file']); }
-				
-				//Grab the first one as a thumb						
-				if (isset($dir_data['file'][0])) {
-					$thumb_url = $this->generateThumbURL($dir_data['file'][0]['path']);
-				}
-				else {
-					$thumb_url = $this->getThemeURL() . 'images/no_images.png';
-				}
+		//Grab the directory info
+		$dir_data = $this->getDirectoryData($fullPathToDir);
+		
+		if ($this->settings['general']['thumb_folder_shuffle'] == true) { shuffle($dir_data['file']); }
+		
+		//Grab the first one as a thumb						
+		if (isset($dir_data['file'][0])) {
+			$thumb_url = $this->generateThumbnailURL($dir_data['file'][0]['path']);
+		}
+		else {
+			$thumb_url = $this->getThemeURL() . 'images/no_images.png';
+		}
 
-			}
-			else {
-				$thumb_url = $this->getThemeURL() . 'images/no_images.png';
-			}
-				
-			$search = array(
-				'{{ThumbSize}}',
-				'{{FolderTitle}}',
-				'{{Link}}',
-				'{{ThumbURL}}',
-				'{{Description}}'
-				);
-			$replace = array(
-				$this->settings['general']['thumb_size'] . 'px',
-				$directory['name'],
-				'?'.$directory['name'],
-				$thumb_url,
-				'Placeholder Folder Description'//$dir['description']
+		$search = array(
+			'{{ThumbSize}}',
+			'{{Title}}',
+			'{{Path}}',
+			'{{ThumbPath}}',
+			'{{Description}}'
 			);
+		$replace = array(
+			$this->settings['general']['thumb_size'] . 'px',
+			$directory['name'],
+			'?'.$directory['name'],
+			$thumb_url,
+			'Placeholder Folder Description'//$dir['description']
+		);
 
 		return str_replace($search, $replace, $folderFormat);
 	}
 	
-	function getDirData($dir) {
-		$current_cache_folder = $this->vars['dir']['cache_from_root'] . $dir . 'cache.xml';
-		$dir = $this->normalizePath($dir);
-		$full_dir = $this->normalizePath($this->vars['dir']['root_from_server_root']) . $dir;
-		$output = array();
-		$fd = array();
-		$ff = array();
+	function getDirectoryData($path) {
 		
-		if (is_dir($full_dir)) {
-			if ( $this->settings['advanced']['use_gd_cache'] == true && is_file($current_cache_folder) ) {
-				if (((time() - filemtime($current_cache_folder)) < $this->settings['advanced']['expire_file_cache'])) {
-					$ff = $this->pullFilesFromCache($current_cache_folder);
-					$fd = $this->pullFoldersFromCache($current_cache_folder);
+		$path = $this->normalizePath($path);
+		$pathFromRoot = $this->normalizePath($this->vars['dir']['root_from_server_root']) . $path;
+		$output = array();
+		$directories = array();
+		$files = array();
+		
+		//If the folder is real, check the caches
+		if (is_dir($pathFromRoot)) {
+			$currentCacheFile = $this->vars['dir']['cache_from_root'] . $path . 'cache.xml';
+			if ( $this->settings['advanced']['use_gd_cache'] == true && is_file($currentCacheFile) ) {
+				if (((time() - filemtime($currentCacheFile)) < $this->settings['advanced']['expire_file_cache'])) {
+					$xml = new SimpleXMLElement(file_get_contents($cacheFile));
+					$files = $this->pullFilesFromCache($xml);
+					$directories = $this->pullFoldersFromCache($xml);
 				}
 			}
 			else {
-				if ($dh = opendir($full_dir)) {
+				if ($dh = opendir($pathFromRoot)) {
 					while (($item = readdir($dh)) !== false) {
-						if (filetype($full_dir . $item) == 'dir' && $this->checkList($item, $this->vars['folder_blacklist']) == false){
-								$fd[] = array(
-									'path'=>$dir . $item,
+						if (filetype($pathFromRoot . $item) == 'dir' && $this->checkList($item, $this->vars['folder_blacklist']) == false){
+								$directories[] = array(
+									'path'=>$path . $item,
 									'name'=>$item,
 									'description'=> "Placeholder description"
 								);
 								
-								sort($fd);
+								sort($directories);
 							}
 						else if (
-							filetype($full_dir . $item) == 'file'
+							filetype($pathFromRoot . $item) == 'file'
 							&& $this->checkList($item, $this->vars['file_blacklist']) == false
 							&& $this->checkList(pathinfo($item)['extension'], $this->vars['file_types']) == true
 							) {
 
-								$ff[] = array(
-									'path'=>$dir . $item,
+								$files[] = array(
+									'path'=>$path . $item,
 									'name'=>$item,
-									'data'=>getimagesize($full_dir . $item),
+									'data'=>getimagesize($pathFromRoot . $item),
 									'description'=> "Placeholder description" 
 								);
 								
-								sort($ff);
+								sort($files);
 							}
 						}
 						closedir($dh);
-					} else {
+					} 
+					else {
 						return false;
 					}
 				}
-			
-			
-				$output['file'] = $ff;
-				$output['dir'] = $fd;
+		
+				$output['file'] = $files;
+				$output['dir'] = $directories;
 				
 				return $output;
 			
@@ -248,41 +243,37 @@ class NeueGal
 			return false;
 		}
 	}
-	function pullFilesFromCache($cacheFile){
-		$xml = new SimpleXMLElement(file_get_contents($cacheFile));
-	
-		$x = 0;
-		$ff = array();
+	function pullFilesFromCache($xml){
+		$i = 0;
+		$files = array();
 		
 		if (isset($xml->files)){
 			foreach($xml->files->file as $files){
-				$ff[$x]['path'] = (string)$files->path;
-				$ff[$x]['name'] = (string)$files->filename;
-				$ff[$x]['data'][0] = (integer)$files->data->width;
-				$ff[$x]['data'][1] = (integer)$files->data->height;
-				$ff[$x]['data'][2] = (integer)$files->data->imagetype;
-				$ff[$x]['data'][3] = (string)$files->data->sizetext;
+				$files[$i]['path'] = (string)$files->path;
+				$files[$i]['name'] = (string)$files->filename;
+				$files[$i]['data'][0] = (integer)$files->data->width;
+				$files[$i]['data'][1] = (integer)$files->data->height;
+				$files[$i]['data'][2] = (integer)$files->data->imagetype;
+				$files[$i]['data'][3] = (string)$files->data->sizetext;
 				
-				$x++;
+				$i++;
 			}
 		}
-		return $ff;
+		return $files;
 		
 	}
-	function pullFoldersFromCache($cacheFile){
-	$xml = new SimpleXMLElement(file_get_contents($cacheFile));
-	
-		$x = 0;
-		$fd = array();
+	function pullFoldersFromCache($xml){
+		$i = 0;
+		$directories = array();
 		if (isset($xml->directories)){
 			foreach($xml->directories->dir as $dirs){
-				$fd[$x]['path'] = (string)$dirs->path;
-				$fd[$x]['name'] = (string)$dirs->dirname;
+				$directories[$i]['path'] = (string)$dirs->path;
+				$directories[$i]['name'] = (string)$dirs->dirname;
 				
-				$x++;
+				$i++;
 			}
 		}
-		return $fd;
+		return $directories;
 	}
 	function cacheDirectory($dir) {
 		$cacheFolderFromRoot = $this->vars['dir']['root_from_server_root'] . $this->vars['dir']['cache_from_root'];
@@ -375,19 +366,29 @@ class NeueGal
 		return $cache_exists;
 	}
 	
-	function generateThumbURL($path) {
-		$cache_folder = $this->vars['dir']['cache_from_root'];
+	function generateThumbnailURL($path) {
+		$cacheFolder = $this->vars['dir']['cache_from_root'];
 		$use_cache = false;
 		$thumb_width = 0;
 		$thumb_height = 0;
 		$thumb_size = array();
 		
-		$file_ext = pathinfo($path)['extension'];
+		$directory = pathinfo($path)['dirname'];
 		
-		$dir = pathinfo($path)['dirname'];
+		//A singal dot signifies the current directory, however, that's inconvenient for our purpose
+		if ($directory == "."){
+			$directory = "";
+		}
+		$directory = $this->normalizePath("$directory");
 		$fileName = pathinfo($path)['filename'];
+		$fileExtension = pathinfo($path)['extension'];
 		
-		$cachedimagepath = $cache_folder . $dir . $fileName . '_' . $this->vars['general']['thumb_size'] .  '.' . $file_ext;
+		$cachedimagepath = $cacheFolder . $directory . $fileName . '_' . $this->vars['general']['thumb_size'] .  '.' . $fileExtension;
+		
+		$generateThumbnailURL = '?thumb=' . $directory . $fileName . '.' . $fileExtension . '&size=' . $this->vars['general']['thumb_size'];
+		$retrieveThumbURL = $cacheFolder . $directory . $fileName . '_' . $this->vars['general']['thumb_size'] .  '.' . $fileExtension;
+		$customThumbURL = $this->settings['advanced']['thumbs_folder'] . $directory . $fileName . '.' . $this->settings['general']['thumb_file_ext'];
+	
 		$originalimagepath = $path;
 		if ($this->settings['advanced']['use_gd'] == true){		
 
@@ -414,50 +415,52 @@ class NeueGal
 			}
 			
 			if ($use_cache == true){
-				$img_url = $cache_folder . $dir . $fileName . '_' . $this->vars['general']['thumb_size'] .  '.' . $file_ext;
+				$img_url = $retrieveThumbURL;
 			} 
 			else {
-				$img_url = '?thumb=' . $dir . $fileName . '.' . $file_ext . '&size=' . $this->vars['general']['thumb_size'];
+				$img_url = $generateThumbnailURL;
 			}
 		} 
 		else {
-			$img_url = '?thumb=' . $dir . $fileName . '.' . $file_ext . '&size=' . $this->vars['general']['thumb_size'];
+			$img_url = $generateThumbnailURL;
 		}
 
 		//Overide for custom thumbs. Place a custom thumb of the same name as the original file in the correct thumb folder and it will be loaded
-		if(file_exists($this->normalizePath($this->settings['advanced']['thumbs_folder']) . $dir . $fileName . '.' . $this->settings['general']['thumb_file_ext'])){
-				$img_url = $this->normalizePath($this->settings['advanced']['thumbs_folder']) . $dir . $fileName . '.' . $this->settings['general']['thumb_file_ext'];
-				}
+		if( file_exists($this->normalizePath($customThumbURL)) ){
+				$img_url = $customThumbURL;
+			}
 		return $img_url;
 	}
 	
-	//Creates thumbnail, either dynamically or for cache depending on settings
+	//Creates thumbnail, either dynamically or from the cache depending on settings
 	function generateThumbnail($path){
-		
 		$safepath = $this->normalizePath($this->escapeString($path, "strip"));
-		$filename = pathinfo($path)['basename'];
+		$basename = pathinfo($path)['basename'];
+		$filename = pathinfo($path)['filename'];
+	
 		$directory = pathinfo($path)['dirname'];
-		$fileextension = pathinfo($path)['extension'];
-
-		$cache_folder = $this->vars['dir']['cache_from_root'] . $safepath;
-		$create_cache_file = false;
-		return false;
-		if ($this->settings['advanced']['use_gd'] == true){
-			$create_cache_file = $this->generateCacheDirectory($directory);
+		if($directory === "."){
+			$directory = "";
 		}
-			
-		$format = $fileextension;
-		switch ($fileextension){
+		$fileExtension = pathinfo($path)['extension'];
+
+		$cacheFolder = $this->vars['dir']['cache_from_root'] . $directory;
+		$targetCachedFileName =  substr($this->vars['dir']['root_from_server_root'], 0, -1) . $this->vars['dir']['cache_from_root'] . $directory . $filename . '_' . $this->vars['general']['thumb_size'] . '.' . $fileExtension;
+		
+		$createCachedFile = false;
+
+		if ($this->settings['advanced']['use_gd'] == true){
+			$createCachedFile = $this->generateCacheDirectory($directory);
+		}
+		$format = $fileExtension;
+		switch ($fileExtension){
 			case 'jpg':
 			case 'jpeg':
 				$image = imagecreatefromjpeg($path);
 				$format = "jpeg";
-			break;
+				break;
 			case 'png':
 				$image = imagecreatefrompng($path);
-				break;
-			case 'gif':
-				$image = imagecreatefromgif($path);
 				break;
 		}
 
@@ -467,57 +470,31 @@ class NeueGal
 		
 		$new_size = $this->resizedSize($width, $height);
 		
-		$new_image = ImageCreateTrueColor($new_size[0], $new_size[1]);
-		imagecopyresampled($new_image, $image, 0, 0, 0, 0, $new_size[0], $new_size[1], $width, $height);
-
-		if ($create_cache_file == false)
-		{
-			header('Pragma: public');
-			header('Cache-Control: maxage=' . $this->settings['advanced']['gd_cache_expire']);
-			header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $this->settings['advanced']['gd_cache_expire']) . ' GMT');
-			header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
-			
-			if ($format == 'jpeg')
-			{
-				header('Content-type: image/jpeg');
-				imagejpeg($new_image, null, $this->settings['advanced']['jpeg_quality']);
-			} else if ($format == 'png') {
-				header('Content-type: image/png');
-				imagepng($new_image);
-			} else if ($format == 'gif') {
-				header('Content-type: image/gif');
-				imagegif($new_image);
-			}
-		} else if ($create_cache_file == true) {
-			header('Pragma: public');
-			header('Cache-Control: maxage=' . $this->settings['advanced']['gd_cache_expire']);
-			header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $this->settings['advanced']['gd_cache_expire']) . ' GMT');
-			header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
-			
-			$targetFileName = $cache_folder . $filename . '_' . $this->vars['general']['thumb_size'] . '.' . $fileextension;
-			switch ($format){
-			case "jpeg":
-				header('Content-type: image/jpeg');
-				imagejpeg($new_image, $targetFileName, $this->settings['advanced']['jpeg_quality']);
-				imagejpeg($new_image);
-			break;
-			case "png":
-				header('Content-type: image/png');
-				imagepng($new_image, $targetFileName);
-				imagepng($new_image);
-			break;
-			case "gif":
-				header('Content-type: image/gif');
-				imagegif($new_image, $targetFileName);
-				imagegif($new_image);
-			break;
-			}
-		}
+		$newImage = ImageCreateTrueColor($new_size[0], $new_size[1]);
 		
-		imagedestroy($new_image);
+		imagecopyresampled($newImage, $image, 0, 0, 0, 0, $new_size[0], $new_size[1], $width, $height);
+
+		header('Pragma: public');
+		header('Cache-Control: maxage=' . $this->settings['advanced']['gd_cache_expire']);
+		header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $this->settings['advanced']['gd_cache_expire']) . ' GMT');
+		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+		
+
+		switch ($format){
+			case 'jpeg':
+				header('Content-type: image/jpeg');
+				if ($createCachedFile){ imagejpeg($newImage, $targetCachedFileName, $this->settings['advanced']['jpeg_quality']);}
+				imagejpeg($newImage, null, $this->settings['advanced']['jpeg_quality']);
+				break;
+			case 'png':
+				header('Content-type: image/png');
+				if ($createCachedFile){ imagepng($newImage, $targetCachedFileName);}
+				imagepng($newImage);
+				break;
+		}	
+		imagedestroy($newImage);
 		
 	}
-
 
 	function getImageDescription($file) {
 		if (function_exists( 'exif_read_data' )) {	// Check if the function exists so no fatal error takes place
@@ -530,10 +507,9 @@ class NeueGal
 	}
 
 	//!Thumbnails
-	function resizedSize($width, $height, $return = 2){
+	function resizedSize($width, $height){
 		//Returns width, height or an array of width and height for the thumbnail size of a full sized image		
-		if ($width > $height)
-		{
+		if ($width > $height){
 			$new_height = $this->vars['general']['thumb_size'];
 			$new_width = $width * ($this->vars['general']['thumb_size'] / $height);
 		} else if ($width < $height) {
@@ -543,18 +519,8 @@ class NeueGal
 			$new_width = $this->vars['general']['thumb_size'];
 			$new_height = $this->vars['general']['thumb_size'];
 		}
+		return array(floor($new_width), floor($new_height));
 		
-		if ($return == 0)
-		{
-			//Return width
-			return floor($new_width);
-		} else if ($return == 1) {
-			//Return height
-			return floor($new_height);
-		} else if ($return == 2) {
-			//Return array with width and height
-			return array(floor($new_width), floor($new_height));
-		}
 	}
 	function getThemeURL(){
 		return 'neuegal/themes/' . $this->settings['general']['theme'] . '/';

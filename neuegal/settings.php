@@ -14,15 +14,15 @@ $this->settings['general']['thumb_folder_shuffle'] = false;
 
 $this->settings['theme']['image'] = '
 <figure class="gallery-entry">
-	<a title="{{ImageTitle}} {{Description}}" class="thumb-container" href="{{Link}}" style="width:{{ThumbSize}}; height:{{ThumbSize}};">
-		<img src="{{ThumbURL}}" alt="{{ImageTitle}}" />
+	<a title="{{Title}} {{Description}}" class="thumb-container" href="{{Path}}" style="width:{{ThumbSize}}; height:{{ThumbSize}};">
+		<img src="{{ThumbPath}}" alt="{{Title}}" />
 	</a>
 </figure>
 ';
 $this->settings['theme']['folder'] = '
 <figure class="gallery-entry folder">
-	<a href="{{Link}}" style="width: {{ThumbSize}}; height: {{ThumbSize}};">
-		<img src="{{ThumbURL}}" alt="{{FolderTitle}}"/>
+	<a href="{{Path}}" style="width: {{ThumbSize}}; height: {{ThumbSize}};">
+		<img src="{{ThumbPath}}" alt="{{Title}}"/>
 	</a>
 </figure>';
 
