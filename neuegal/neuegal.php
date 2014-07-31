@@ -23,7 +23,7 @@ class NeueGal
 		//Directories
 		$dir = array();
 		$dir['root'] = pathinfo($_SERVER['SCRIPT_NAME'])['dirname']; // The folder where index.php is
-		$dir['cache_from_root'] = $dir['root'] . $this->settings['advanced']['cache_folder'];
+		$dir['cache_from_root'] = $dir['root'] . $this->settings['advanced']['cache_path'];
 		
 		$dir['current'] = '';
 		//We listen to query strings to deduce the folder the user is going for
@@ -42,7 +42,6 @@ class NeueGal
 		}
 		$this->vars['dir'] = $dir;
 		$this->vars['general']['current_folder_name'] = $this->getDirectoryName($dir['current']);
-		$this->vars['general']['thumb_size'] = $this->settings['general']['thumb_size'];
 		//$this->vars['general']['description'] = 
 
 		$temp_file = file_get_contents('neuegal/file_blacklist.txt');
@@ -78,11 +77,7 @@ class NeueGal
 			error_reporting(E_ALL);
 			ini_set('display_errors', '1');
 		}
-		
-		//GZIP Compression
-		ini_set('zlib.output_compression', $this->settings['advanced']['use_gzip_compression']);
-		ini_set('zlib.output_compression_level', $this->settings['advanced']['gzip_compression_level']);	
-	
+
 		//Load Variables
 		$this->loadVars();
 		
@@ -116,7 +111,7 @@ class NeueGal
 		
 		if (isset($this->vars['file_list'])){
 			foreach ($this->vars['file_list'] as $file){		
-				$return_string .= $this->makeFile($file);
+				$return_string .= $this->makeImage($file);
 		
 			}
 		}
@@ -125,7 +120,7 @@ class NeueGal
 		
 	}
 //Content Generators
-	function makeFile($file){
+	function makeImage($file){
 		$imageFormat = $this->settings['theme']['image'];
 		$search = array(
 			'{{ThumbSize}}',
@@ -136,10 +131,10 @@ class NeueGal
 		);
 		
 		$replace = array(
-			$this->settings['general']['thumb_size'] . 'px',
+			$this->settings['general']['thumbnail_size'] . 'px',
 			pathinfo($file['name'])['filename'],
 			$file['path'],
-			$this->generateThumbnailURL($file['path']),
+			$this->getThumbnailPath($file['path']),
 			"Placeholder Description"//$file['description']
 		);
 
@@ -151,11 +146,11 @@ class NeueGal
 		//Grab the directory info
 		$directoryData = $this->getDirectoryData($fullPathToDir);
 		
-		if ($this->settings['general']['thumb_folder_shuffle'] == true) { shuffle($directoryData['file']); }
+		if ($this->settings['general']['random_folder_thumbnail'] == true) { shuffle($directoryData['file']); }
 		
 		//Grab the first one as a thumb						
 		if (isset($directoryData['file'][0])) {
-			$thumb_url = $this->generateThumbnailURL($directoryData['file'][0]['path']);
+			$thumb_url = $this->getThumbnailPath($directoryData['file'][0]['path']);
 		}
 		else {
 			$thumb_url = $this->getThemeURL() . 'images/no_images.png';
@@ -169,7 +164,7 @@ class NeueGal
 			'{{Description}}'
 			);
 		$replace = array(
-			$this->settings['general']['thumb_size'] . 'px',
+			$this->settings['general']['thumbnail_size'] . 'px',
 			$directory['name'],
 			'?'.$directory['name'],
 			$thumb_url,
@@ -190,8 +185,8 @@ class NeueGal
 		//If the folder is real, check the caches
 		if (is_dir($pathFromRoot)) {
 			$currentCacheFile = $this->vars['dir']['cache_from_root'] . $path . 'cache.xml';
-			if ( $this->settings['advanced']['use_gd_cache'] == true && is_file($currentCacheFile) ) {
-				if (((time() - filemtime($currentCacheFile)) < $this->settings['advanced']['expire_file_cache'])) {
+			if ( is_file($currentCacheFile) ) {
+				if (((time() - filemtime($currentCacheFile)) < $this->settings['advanced']['cache_expire'])) {
 					$xml = new SimpleXMLElement(file_get_contents($cacheFile));
 					$files = $this->pullFilesFromCache($xml);
 					$directories = $this->pullFoldersFromCache($xml);
@@ -364,12 +359,8 @@ class NeueGal
 		return $cache_exists;
 	}
 	
-	function generateThumbnailURL($path) {
-		$cacheFolder = $this->vars['dir']['cache_from_root'];
-		$use_cache = false;
-		$thumb_width = 0;
-		$thumb_height = 0;
-		$thumb_size = array();
+	//Checks to see if a thumbnail already exists, if not it creates one and returns the path to it in the cache
+	function getThumbnailPath($path) {
 		
 		$directory = pathinfo($path)['dirname'];
 		
@@ -380,103 +371,70 @@ class NeueGal
 		$directory = $this->normalizePath("$directory");
 		$fileName = pathinfo($path)['filename'];
 		$fileExtension = pathinfo($path)['extension'];
+		$possibleCachedFilePath = $this->vars['dir']['cache_from_root'] . $directory . $fileName . '_' . $this->settings['general']['thumbnail_size'] . '.' . $fileExtension;
+		$possibleCachedFilePathFromRoot =  substr($this->vars['dir']['root_from_server_root'], 0, -1) . $possibleCachedFilePath;
 		
-		$cachedimagepath = $cacheFolder . $directory . $fileName . '_' . $this->vars['general']['thumb_size'] .  '.' . $fileExtension;
-		
-		$generateThumbnailURL = '?thumb=' . $directory . $fileName . '.' . $fileExtension . '&size=' . $this->vars['general']['thumb_size'];
-		$retrieveThumbURL = $cacheFolder . $directory . $fileName . '_' . $this->vars['general']['thumb_size'] .  '.' . $fileExtension;
-		$customThumbURL = $this->settings['advanced']['thumbs_folder'] . $directory . $fileName . '.' . $this->settings['general']['thumb_file_ext'];
+		$getThumbnailPath = '?thumb=' . $directory . $fileName . '.' . $fileExtension . '&size=' . $this->settings['general']['thumbnail_size'];
+		$possibleCustomThumbPath = $this->settings['advanced']['custom_thumbnails_path'] . $directory . $fileName . '.' . $fileExtension;
 	
 		$originalimagepath = $path;
-		if ($this->settings['advanced']['use_gd'] == true){		
-
-			$use_cache = false;
-			
-			if (!is_file($cachedimagepath))
-			{
-				//Cached image does not exist, create if possible
-				$use_cache = false;
-			}
-			else {
-				//Cached image exists, check if correct image size
-				list($thumb_width, $thumb_height) = getimagesize($cachedimagepath);
-				list($originalWidth, $originalHeight) = getimagesize($originalimagepath);
-				$thumb_size = $this->resizedSize($originalWidth, $originalHeight);
-				
-				if ($thumb_size[0] != $thumb_width and $thumb_size[1] != $thumb_height){
-					//Cached image does not match the current thumbnail size settings, create new thumbnail
-					$use_cache = false;
-				} else {
-					//Cached image does not need updating, use cached thumbnail
-					$use_cache = true;
-				}
-			}
-			
-			if ($use_cache == true){
-				$img_url = $retrieveThumbURL;
-			} 
-			else {
-				$img_url = $generateThumbnailURL;
-			}
-		} 
+		if ( is_file($possibleCustomThumbPath) ){
+			return $possibleCustomThumbPath;
+		}
+		else if ( is_file($possibleCachedFilePathFromRoot) ){
+			return $possibleCachedFilePath;
+		}
 		else {
-			$img_url = $generateThumbnailURL;
+			//This is where you could insert a setting to disable the use of custom thumbnails
+			$this->generateThumbnail($originalimagepath);
+			return $possibleCachedFilePath;
 		}
 
-		//Overide for custom thumbs. Place a custom thumb of the same name as the original file in the correct thumb folder and it will be loaded
-		if( file_exists($this->normalizePath($customThumbURL)) ){
-				$img_url = $customThumbURL;
-			}
-		return $img_url;
 	}
-	
-	//Creates thumbnail, either dynamically or from the cache depending on settings
-	function generateThumbnail($path){
-		$safepath = $this->normalizePath($this->escapeString($path, "strip"));
-		$basename = pathinfo($path)['basename'];
-		$filename = pathinfo($path)['filename'];
-		$fileExtension = pathinfo($path)['extension'];
-		$directory = pathinfo($path)['dirname'];
+	//Takes a path to an original file and a longest edge size, creates then caches or retrieves the image and then displays it
+	function displayThumbnail($path,$size){
+		if(is_file($targetCachedFileName)){
+			switch ($fileExtension){
+				case 'jpg':
+				case 'jpeg':
+					$this->displayImage(imagecreatefromjpeg($targetCachedFileName), $fileExtension);
+					$format = "jpeg";
+				case 'png':
+					$this->displayImage(imagecreatefrompng($targetCachedFileName), $fileExtension);
+					break;
+			}
+		}
+	}
+	//Takes a path to an original file, creates thumbnail and caches it
+	function generateThumbnail($originalImagePath){
+		$filename = pathinfo($originalImagePath)['filename'];
+		$fileExtension = pathinfo($originalImagePath)['extension'];
+		$directory = pathinfo($originalImagePath)['dirname'];
 		
 		if($directory === "."){
 			$directory = "";
 		}
 		$directory = $this->normalizePath($directory);
 		
-
 		$cacheFolder = $this->vars['dir']['cache_from_root'] . $directory;
-		$targetCachedFileName =  substr($this->vars['dir']['root_from_server_root'], 0, -1) . $this->vars['dir']['cache_from_root'] . $directory . $filename . '_' . $this->vars['general']['thumb_size'] . '.' . $fileExtension;
-		if(is_file($targetCachedFileName)){
-			switch ($fileExtension){
-			case 'jpg':
-			case 'jpeg':
-				$this->displayImage(imagecreatefromjpeg($targetCachedFileName), $fileExtension);
-				$format = "jpeg";
-			case 'png':
-				$this->displayImage(imagecreatefrompng($targetCachedFileName), $fileExtension);
-				break;
-		}
-			
-		}
+		$targetCachedFileName =  substr($this->vars['dir']['root_from_server_root'], 0, -1) . $this->vars['dir']['cache_from_root'] . $directory . $filename . '_' . $this->settings['general']['thumbnail_size'] . '.' . $fileExtension;
 		
-		$createCachedFile = false;
-		
-		if ($this->settings['advanced']['use_gd'] == true){
-			$createCachedFile = $this->generateCacheDirectory($directory);
-		}
-		$format = $fileExtension;
+	
+		$createCachedFile = $this->generateCacheDirectory($directory);
+
+		//Load the original image
 		switch ($fileExtension){
 			case 'jpg':
 			case 'jpeg':
-				$image = imagecreatefromjpeg($path);
+				$image = imagecreatefromjpeg($originalImagePath);
 				$format = "jpeg";
 				break;
 			case 'png':
-				$image = imagecreatefrompng($path);
+				$image = imagecreatefrompng($originalImagePath);
 				break;
 		}
 		
-		
+		//Resize it
 		$width = imagesx($image);
 		$height = imagesy($image);
 		
@@ -485,16 +443,15 @@ class NeueGal
 		$newImage = ImageCreateTrueColor($new_size[0], $new_size[1]);
 		
 		imagecopyresampled($newImage, $image, 0, 0, 0, 0, $new_size[0], $new_size[1], $width, $height);
-
-		$this->displayImage($newImage, $format);
-		$this->cacheImage($newImage, $format);
+		$this->cacheImage($newImage, $targetCachedFileName, $format);
+		return true;
 		
 	}
 	function displayImage($image, $format){
 		
 		header('Pragma: public');
-		header('Cache-Control: maxage=' . $this->settings['advanced']['gd_cache_expire']);
-		header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $this->settings['advanced']['gd_cache_expire']) . ' GMT');
+		header('Cache-Control: maxage=' . $this->settings['advanced']['thumbnail_expire']);
+		header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $this->settings['advanced']['thumbnail_expire']) . ' GMT');
 		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
 		
 		switch ($format){
@@ -510,6 +467,7 @@ class NeueGal
 		}	
 		imagedestroy($image);
 	}
+	
 	function cacheImage($image, $path, $format){
 		switch ($format){
 			case 'jpeg':
@@ -535,14 +493,14 @@ class NeueGal
 	function resizedSize($width, $height){
 		//Returns width, height or an array of width and height for the thumbnail size of a full sized image		
 		if ($width > $height){
-			$new_height = $this->vars['general']['thumb_size'];
-			$new_width = $width * ($this->vars['general']['thumb_size'] / $height);
+			$new_height = $this->settings['general']['thumbnail_size'];
+			$new_width = $width * ($this->settings['general']['thumbnail_size'] / $height);
 		} else if ($width < $height) {
-			$new_height = $height * ($this->vars['general']['thumb_size'] / $width);
-			$new_width = $this->vars['general']['thumb_size'];
+			$new_height = $height * ($this->settings['general']['thumbnail_size'] / $width);
+			$new_width = $this->settings['general']['thumbnail_size'];
 		} else if ($width == $height) {
-			$new_width = $this->vars['general']['thumb_size'];
-			$new_height = $this->vars['general']['thumb_size'];
+			$new_width = $this->settings['general']['thumbnail_size'];
+			$new_height = $this->settings['general']['thumbnail_size'];
 		}
 		return array(floor($new_width), floor($new_height));
 		
@@ -594,6 +552,7 @@ class NeueGal
 		}
 		return null;
 	}
+
 // Plumbing and Debug
 	function startTimer() {
 		$temp_time = microtime();
@@ -638,6 +597,7 @@ class NeueGal
 		echo $this->vars['error'];
 	}
 }
+
 //This is a convenience polyfill until PHP6
 function issetor(&$var, $default = false) {
 	return isset($var) ? $var : $default;

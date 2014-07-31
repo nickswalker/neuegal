@@ -3,42 +3,35 @@
 $this->settings['general']['site_name'] = 'NeueGal';
 $this->settings['general']['theme'] = 'default';
 
-$this->settings['general']['thumb_size'] = 175;
+$this->settings['general']['thumbnail_size'] = 300; //In pixels. Should usually be set by the theme
 
-$this->settings['general']['thumb_file_ext'] = 'jpg';
-$this->settings['general']['thumb_folder_show_thumbs'] = true;
-$this->settings['general']['thumb_folder_shuffle'] = false;
+$this->settings['general']['folder_thumbnails'] = true;
+$this->settings['general']['random_folder_thumbnail'] = false;
 
 
 /* Theme*/
 
 $this->settings['theme']['image'] = '
-<figure class="gallery-entry">
+<li>
 	<a title="{{Title}} {{Description}}" class="thumb-container" href="{{Path}}" style="width:{{ThumbSize}}; height:{{ThumbSize}};">
 		<img src="{{ThumbPath}}" alt="{{Title}}" />
 	</a>
-</figure>
+</li>
 ';
 $this->settings['theme']['folder'] = '
-<figure class="gallery-entry folder">
+<li class="folder">
 	<a href="{{Path}}" style="width: {{ThumbSize}}; height: {{ThumbSize}};">
 		<img src="{{ThumbPath}}" alt="{{Title}}"/>
 	</a>
-</figure>';
+</li>';
 
 /* Advanced */
 
 $this->settings['advanced']['debug_mode'] = false;
 $this->settings['advanced']['debug_show_all'] = false;
- 
 
-$this->settings['advanced']['use_gzip_compression'] = 'on';
-$this->settings['advanced']['gzip_compression_level'] = 1;
-
-$this->settings['advanced']['use_gd'] = true;
-$this->settings['advanced']['use_gd_cache'] = true;
-$this->settings['advanced']['jpeg_quality'] = 75;
-$this->settings['advanced']['gd_cache_expire'] = 172800;
-$this->settings['advanced']['expire_file_cache'] = 86400; 
-$this->settings['advanced']['cache_folder'] = 'neuegal/cache'; //Relative from index.php
-$this->settings['advanced']['thumbs_folder'] = 'neuegal/thumbs'; //Relative from index.php
+$this->settings['advanced']['jpeg_quality'] = 75; //0-100
+$this->settings['advanced']['thumbnail_expire'] = 172800; //Seconds
+$this->settings['advanced']['cache_expire'] = 86400; //Seconds
+$this->settings['advanced']['cache_path'] = 'neuegal/cache'; //Relative from index.php
+$this->settings['advanced']['custom_thumbnails_path'] = 'neuegal/custom-thumbs'; //Relative from index.php
