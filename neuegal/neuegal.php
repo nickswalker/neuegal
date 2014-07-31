@@ -1,7 +1,14 @@
 <?php
+require("FileSystemHelper.php");
 class NeueGal{
 	var $settings;
 	var $vars;
+	var $fileSystemHelper;
+	
+	public function __construct() {
+		$this->fileSystemHelper  = new FileSystemHelper(normalizePath(dirname($_SERVER['SCRIPT_FILENAME'])));
+    	
+	}
 
 	function loadSettings() {
 		if (is_file('neuegal/settings.php')){
@@ -35,27 +42,20 @@ class NeueGal{
 		$dir['root_from_server_root'] = dirname($_SERVER['SCRIPT_FILENAME']);
 		
 		foreach( $dir as $name=>$value){
-			$dir[$name] = $this->normalizePath($dir[$name]);
+			$dir[$name] = normalizePath($dir[$name]);
 		}
 		$this->vars['dir'] = $dir;
 		$this->vars['general']['current_folder_name'] = $this->getDirectoryName($dir['current']);
-		//$this->vars['general']['description'] = 
+		$this->vars['general']['description'] = 
 
-		$temp_file = file_get_contents('neuegal/file_blacklist.txt');
-		$this->vars['file_blacklist'] = explode(",", $temp_file);
 		
-		$temp_folder = file_get_contents('neuegal/folder_blacklist.txt');
-		$this->vars['folder_blacklist'] = explode(",", $temp_folder);
-		
-		$temp_type = file_get_contents('neuegal/file_types.txt');
-		$this->vars['file_types'] = explode(",", $temp_type);
 		
 		// Populates $this->vars['file_list'] and $this->vars['folder_list']
 		$this->loadDirectoryInformation($this->vars['dir']['current']);
 		
 	}
 	function loadDirectoryInformation($dir) {		
-		if ($directoryData = $this->getDirectoryData($dir)) {
+		if ($directoryData = $this->fileSystemHelper->getDirectoryData( $dir)) {
 			if (count($directoryData['file']) > 0) { $this->vars['file_list'] = $directoryData['file']; }
 			if (count($directoryData['dir']) > 0) { $this->vars['folder_list'] = $directoryData['dir']; }
 	
@@ -67,7 +67,8 @@ class NeueGal{
 			return false;
 		}
 	}
-	function initialize(){		
+	function initialize(){	
+			
 		//Debug Mode		
 		if ($this->settings['advanced']['debug_mode'] == true)
 		{
@@ -139,9 +140,9 @@ class NeueGal{
 	}
 	function makeFolder($directory){
 		$folderFormat = $this->settings['theme']['folder']; 
-		$fullPathToDir = $directory['path'];
+		$fullPathToDir = $this->vars['dir']['root_from_server_root'] . $directory['path'];
 		//Grab the directory info
-		$directoryData = $this->getDirectoryData($fullPathToDir);
+		$directoryData = $this->fileSystemHelper->getDirectoryData($directory['path']);
 		
 		if ($this->settings['general']['random_folder_thumbnail'] == true) { shuffle($directoryData['file']); }
 		
@@ -171,100 +172,7 @@ class NeueGal{
 		return str_replace($search, $replace, $folderFormat);
 	}
 	
-	function getDirectoryData($path) {
-		
-		$path = $this->normalizePath($path);
-		$pathFromRoot = $this->normalizePath($this->vars['dir']['root_from_server_root']) . $path;
-		$output = array();
-		$directories = array();
-		$files = array();
-		
-		//If the folder is real, check the caches
-		if (is_dir($pathFromRoot)) {
-			$currentCacheFile = $this->vars['dir']['cache_from_root'] . $path . 'cache.xml';
-			if ( is_file($currentCacheFile) ) {
-				if (((time() - filemtime($currentCacheFile)) < $this->settings['advanced']['cache_expire'])) {
-					$xml = new SimpleXMLElement(file_get_contents($cacheFile));
-					$files = $this->pullFilesFromCache($xml);
-					$directories = $this->pullFoldersFromCache($xml);
-				}
-			}
-			else {
-				if ($dh = opendir($pathFromRoot)) {
-					while (($item = readdir($dh)) !== false) {
-						if (filetype($pathFromRoot . $item) == 'dir' && $this->checkList($item, $this->vars['folder_blacklist']) == false){
-								$directories[] = array(
-									'path'=>$path . $item,
-									'name'=>$item,
-									'description'=> "Placeholder description"
-								);
-								
-								sort($directories);
-							}
-						else if (
-							filetype($pathFromRoot . $item) == 'file'
-							&& $this->checkList($item, $this->vars['file_blacklist']) == false
-							&& $this->checkList(pathinfo($item)['extension'], $this->vars['file_types']) == true
-							) {
 
-								$files[] = array(
-									'path'=>$path . $item,
-									'name'=>$item,
-									'data'=>getimagesize($pathFromRoot . $item),
-									'description'=> "Placeholder description" 
-								);
-								
-								sort($files);
-							}
-						}
-						closedir($dh);
-					} 
-					else {
-						return false;
-					}
-				}
-		
-				$output['file'] = $files;
-				$output['dir'] = $directories;
-				
-				return $output;
-			
-		} else {
-			return false;
-		}
-	}
-	function pullFilesFromCache($xml){
-		$i = 0;
-		$files = array();
-		
-		if (isset($xml->files)){
-			foreach($xml->files->file as $files){
-				$files[$i]['path'] = (string)$files->path;
-				$files[$i]['name'] = (string)$files->filename;
-				$files[$i]['data'][0] = (integer)$files->data->width;
-				$files[$i]['data'][1] = (integer)$files->data->height;
-				$files[$i]['data'][2] = (integer)$files->data->imagetype;
-				$files[$i]['data'][3] = (string)$files->data->sizetext;
-				
-				$i++;
-			}
-		}
-		return $files;
-		
-	}
-	function pullFoldersFromCache($xml){
-		$i = 0;
-		$directories = array();
-		if (isset($xml->directories)){
-			foreach($xml->directories->dir as $dirs){
-				$directories[$i]['path'] = (string)$dirs->path;
-				$directories[$i]['name'] = (string)$dirs->dirname;
-				
-				$i++;
-			}
-		}
-		return $directories;
-	}
 	function cacheDirectory($dir) {
 		$cacheFolderFromRoot = $this->vars['dir']['root_from_server_root'] . $this->vars['dir']['cache_from_root'];
 		$cache_exists = false;
@@ -365,7 +273,7 @@ class NeueGal{
 		if ($directory == "."){
 			$directory = "";
 		}
-		$directory = $this->normalizePath("$directory");
+		$directory = normalizePath("$directory");
 		$fileName = pathinfo($path)['filename'];
 		$fileExtension = pathinfo($path)['extension'];
 		$possibleCachedFilePath = $this->vars['dir']['cache_from_root'] . $directory . $fileName . '_' . $this->settings['general']['thumbnail_size'] . '.' . $fileExtension;
@@ -397,7 +305,7 @@ class NeueGal{
 		if($directory === "."){
 			$directory = "";
 		}
-		$directory = $this->normalizePath($directory);
+		$directory = normalizePath($directory);
 		
 		$cacheFolder = $this->vars['dir']['cache_from_root'] . $directory;
 		$targetCachedFileName =  substr($this->vars['dir']['root_from_server_root'], 0, -1) . $this->vars['dir']['cache_from_root'] . $directory . $filename . '_' . $this->settings['general']['thumbnail_size'] . '.' . $fileExtension;
@@ -462,15 +370,7 @@ class NeueGal{
 				break;
 		}	
 	}
-	function getImageDescription($file) {
-		if (function_exists( 'exif_read_data' )) {	// Check if the function exists so no fatal error takes place
-			$exif = @exif_read_data($file, 0, true);		// @ supresses warnings for Cannon images
-			//print_r($exif);
-			$output	= $exif['COMPUTED']['UserComment'];
-		}
-	
-		return $output;
-	}
+
 
 	//!Thumbnails
 	function resizedSize($width, $height){
@@ -494,16 +394,7 @@ class NeueGal{
 	function getUpFolderURL(){
 		return '?' . pathinfo($_GET['file'])['dirname'];
 	}
-	//String Helpers
-	
-	function checkList($item, $list) {		
-		foreach($list as $list_item){
-			if (strtolower($list_item) == strtolower($item)){
-				return true;
-			}
-		}
-		return false;
-	}
+
 	//Cleanup and Formatting Helpers
 	
 	function escapeString($string, $action = "add") {
@@ -518,16 +409,7 @@ class NeueGal{
 		}
 	}
 	//Must end with a slash unless it's empty
-	function normalizePath($path) {
-		$path = str_replace("%20", " ", $path);
-		if ($path == '') {
-			return '';
-		} else if (substr($path, -1) !== '/') {
-			return $path . '/';
-		} else {
-			return $path;
-		}
-	}
+
 	function getDirectoryName($path){
 		$directoriesFromPath = explode('/', $path);
 		if (isset($directoriesFromPath[count($directoriesFromPath)-2])){
@@ -580,7 +462,16 @@ class NeueGal{
 		echo $this->vars['error'];
 	}
 }
-
+function normalizePath($path) {
+	$path = str_replace("%20", " ", $path);
+	if ($path == '') {
+		return '';
+	} else if (substr($path, -1) !== '/') {
+		return $path . '/';
+	} else {
+		return $path;
+	}
+}
 //This is a convenience polyfill until PHP6
 function issetor(&$var, $default = false) {
 	return isset($var) ? $var : $default;
