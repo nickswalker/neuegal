@@ -29,20 +29,20 @@ class NeueGal
 		//We listen to query strings to deduce the folder the user is going for
 		// forinstance: nickwalker.us/photos?hello  would mean they want to look into the folder /photos/hello
 		if($_SERVER['QUERY_STRING']){
-			$dir['current'] .= $_SERVER['QUERY_STRING'];	
-			$dir['current_parent'] = dirname($dir['current']);
+			$dir['current'] .= $_SERVER['QUERY_STRING'];
+			
 		}						
 		
 		$dir['current_from_root'] = $dir['root'] . $dir['current']; 	
+		$dir['current_parent_from_root'] = dirname($dir['current_from_root']);
 		$dir['root_from_server_root'] = dirname($_SERVER['SCRIPT_FILENAME']);
 		
 		foreach( $dir as $name=>$value){
 			$dir[$name] = $this->normalizePath($dir[$name]);
 		}
 		$this->vars['dir'] = $dir;
-
+		$this->vars['general']['current_folder_name'] = $this->getDirectoryName($dir['current']);
 		$this->vars['general']['thumb_size'] = $this->settings['general']['thumb_size'];
-		$this->vars['general']['page_title'] = $dir['current'];
 		//$this->vars['general']['description'] = 
 
 		$temp_file = file_get_contents('neuegal/file_blacklist.txt');
@@ -56,11 +56,12 @@ class NeueGal
 		
 		// Populates $this->vars['file_list'] and $this->vars['folder_list']
 		$this->loadDirectoryInformation($this->vars['dir']['current']);
+		
 	}
 	function loadDirectoryInformation($dir) {		
-		if ($dir_data = $this->getDirectoryData($dir)) {
-			if (count($dir_data['file']) > 0) { $this->vars['file_list'] = $dir_data['file']; }
-			if (count($dir_data['dir']) > 0) { $this->vars['folder_list'] = $dir_data['dir']; }
+		if ($directoryData = $this->getDirectoryData($dir)) {
+			if (count($directoryData['file']) > 0) { $this->vars['file_list'] = $directoryData['file']; }
+			if (count($directoryData['dir']) > 0) { $this->vars['folder_list'] = $directoryData['dir']; }
 	
 			$this->cacheDirectory($dir);
 		
@@ -80,16 +81,13 @@ class NeueGal
 		
 		//GZIP Compression
 		ini_set('zlib.output_compression', $this->settings['advanced']['use_gzip_compression']);
-		ini_set('zlib.output_compression_level', $this->settings['advanced']['gzip_compression_level']);
-		
+		ini_set('zlib.output_compression_level', $this->settings['advanced']['gzip_compression_level']);	
 	
 		//Load Variables
 		$this->loadVars();
 		
 		//Display Content
-		if (isset($_GET['thumb'])) 
-		{
-			//Show thumbnail only
+		if (isset($_GET['thumb'])) {
 			$this->generateThumbnail($_GET['thumb']);
 		} 
 		else {
@@ -151,13 +149,13 @@ class NeueGal
 		$folderFormat = $this->settings['theme']['folder']; 
 		$fullPathToDir = $directory['path'];
 		//Grab the directory info
-		$dir_data = $this->getDirectoryData($fullPathToDir);
+		$directoryData = $this->getDirectoryData($fullPathToDir);
 		
-		if ($this->settings['general']['thumb_folder_shuffle'] == true) { shuffle($dir_data['file']); }
+		if ($this->settings['general']['thumb_folder_shuffle'] == true) { shuffle($directoryData['file']); }
 		
 		//Grab the first one as a thumb						
-		if (isset($dir_data['file'][0])) {
-			$thumb_url = $this->generateThumbnailURL($dir_data['file'][0]['path']);
+		if (isset($directoryData['file'][0])) {
+			$thumb_url = $this->generateThumbnailURL($directoryData['file'][0]['path']);
 		}
 		else {
 			$thumb_url = $this->getThemeURL() . 'images/no_images.png';
@@ -279,7 +277,7 @@ class NeueGal
 		$cacheFolderFromRoot = $this->vars['dir']['root_from_server_root'] . $this->vars['dir']['cache_from_root'];
 		$cache_exists = false;
 		
-		if (count($this->vars['folder_list']) > 0 or count($this->vars['file_list']) > 0) {
+		if ( isset($this->vars['folder_list']) or isset($this->vars['file_list']) ) {
 			$cache_exists = $this->generateCacheDirectory($dir);
 			
 			if ($cache_exists == true)
@@ -437,20 +435,32 @@ class NeueGal
 		$safepath = $this->normalizePath($this->escapeString($path, "strip"));
 		$basename = pathinfo($path)['basename'];
 		$filename = pathinfo($path)['filename'];
-	
+		$fileExtension = pathinfo($path)['extension'];
 		$directory = pathinfo($path)['dirname'];
 		
 		if($directory === "."){
 			$directory = "";
 		}
 		$directory = $this->normalizePath($directory);
-		$fileExtension = pathinfo($path)['extension'];
+		
 
 		$cacheFolder = $this->vars['dir']['cache_from_root'] . $directory;
 		$targetCachedFileName =  substr($this->vars['dir']['root_from_server_root'], 0, -1) . $this->vars['dir']['cache_from_root'] . $directory . $filename . '_' . $this->vars['general']['thumb_size'] . '.' . $fileExtension;
+		if(is_file($targetCachedFileName)){
+			switch ($fileExtension){
+			case 'jpg':
+			case 'jpeg':
+				$this->displayImage(imagecreatefromjpeg($targetCachedFileName), $fileExtension);
+				$format = "jpeg";
+			case 'png':
+				$this->displayImage(imagecreatefrompng($targetCachedFileName), $fileExtension);
+				break;
+		}
+			
+		}
 		
 		$createCachedFile = false;
-
+		
 		if ($this->settings['advanced']['use_gd'] == true){
 			$createCachedFile = $this->generateCacheDirectory($directory);
 		}
@@ -465,7 +475,7 @@ class NeueGal
 				$image = imagecreatefrompng($path);
 				break;
 		}
-
+		
 		
 		$width = imagesx($image);
 		$height = imagesy($image);
@@ -476,28 +486,41 @@ class NeueGal
 		
 		imagecopyresampled($newImage, $image, 0, 0, 0, 0, $new_size[0], $new_size[1], $width, $height);
 
+		$this->displayImage($newImage, $format);
+		$this->cacheImage($newImage, $format);
+		
+	}
+	function displayImage($image, $format){
+		
 		header('Pragma: public');
 		header('Cache-Control: maxage=' . $this->settings['advanced']['gd_cache_expire']);
 		header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $this->settings['advanced']['gd_cache_expire']) . ' GMT');
 		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
 		
-
 		switch ($format){
 			case 'jpeg':
+			case 'jpg':
 				header('Content-type: image/jpeg');
-				if ($createCachedFile){ imagejpeg($newImage, $targetCachedFileName, $this->settings['advanced']['jpeg_quality']);}
-				imagejpeg($newImage, null, $this->settings['advanced']['jpeg_quality']);
+				imagejpeg($image, null, $this->settings['advanced']['jpeg_quality']);
 				break;
 			case 'png':
 				header('Content-type: image/png');
-				if ($createCachedFile){ imagepng($newImage, $targetCachedFileName);}
-				imagepng($newImage);
+				imagepng($image);
 				break;
 		}	
-		imagedestroy($newImage);
-		
+		imagedestroy($image);
 	}
-
+	function cacheImage($image, $path, $format){
+		switch ($format){
+			case 'jpeg':
+				imagejpeg($image, $path, $this->settings['advanced']['jpeg_quality']);
+				break;
+			case 'png':
+				header('Content-type: image/png');
+				imagepng($image, $path);
+				break;
+		}	
+	}
 	function getImageDescription($file) {
 		if (function_exists( 'exif_read_data' )) {	// Check if the function exists so no fatal error takes place
 			$exif = @exif_read_data($file, 0, true);		// @ supresses warnings for Cannon images
@@ -555,6 +578,7 @@ class NeueGal
 	}
 	//Must end with a slash unless it's empty
 	function normalizePath($path) {
+		$path = str_replace("%20", " ", $path);
 		if ($path == '') {
 			return '';
 		} else if (substr($path, -1) !== '/') {
@@ -562,6 +586,13 @@ class NeueGal
 		} else {
 			return $path;
 		}
+	}
+	function getDirectoryName($path){
+		$directoriesFromPath = explode('/', $path);
+		if (isset($directoriesFromPath[count($directoriesFromPath)-2])){
+			return $directoriesFromPath[count($directoriesFromPath)-2];
+		}
+		return null;
 	}
 // Plumbing and Debug
 	function startTimer() {
