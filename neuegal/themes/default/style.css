@@ -62,12 +62,9 @@ a:active {color:#555;}  /* selected link */
 	background: #CCC; /* Firefox */
 }
 body {
-	background-color: white;
-	width: 1075px;
-	margin: 45px auto;
+	background-color: black;
 }
 #content	{
-	margin: 15px 0 24px 0;
 	overflow: auto;
 	height: auto;
 }
@@ -115,83 +112,54 @@ form {
 }
 
 
-/* = Contact
+/* = Header
 -------------------------------------------------------------- */
 
-.page-bar	{
+header	{
 	font-size: 24px;
 	font-weight: 500;
 	display: block;
-	height: 56px
+	padding: 12px;
 	box-sizing: border-box;
-	margin: 0 0 45px 0;
-	background-color: #666;
+	background-color: rgba(190,190,190,.5);
 	overflow: auto;
 	position: relative;
-	color: #ddd;
+	color: white;
+	z-index: 9;
 }
-.page-bar a	{
-	display: block;
-	padding: 0 20px;
-	background-color: #ddd;
-	color: #666;
-	height: 100%;
-}
-.page-bar h2	{
-	float: left;
-	margin-left: 20px;
-	color: inherit;
-}
-.page-bar .description	{
-	font-size: 16px;
-	font-weight: 100;
-	font-style: italic;
-	margin-top: 15px;
-	display: inline-block;
-}
-.page-bar .description::before	{
-	content: "\a0 - ";
-}
-.page-bar a, .page-bar h2	{
-	text-decoration: none;
-	line-height: 2.2;
-}
-.page-bar .info-link	{
-	float: right;
-	background-size: contain;
-	
-}
-.page-bar .up	{
-	float: left;
-}
-.page-bar .up	{
 
+/* = Gallery
+-------------------------------------------------------------- */
+.gallery	{
+	display: -webkit-flex;
+	display: flex;
+	-webkit-flex-flow: row wrap;
+	flex-flow: row wrap;
+	-webkit-justify-content: flex-start;
+	justify-content: space-around;
 }
-/* Thumbnail */
-.gallery-entry	{
+.gallery li	{
 	display: inline-block;
 	overflow: auto;
-	margin: 0 50px 45px 0;
 	float: left;
+	-webkit-flex: 0 1 auto;
+	flex: 0 1 auto;
 }
-.gallery-entry.folder	{
-	margin-bottom: 20px;
+.gallery li.folder	{
+
 }
-.gallery-entry:nth-of-type(5n)	{
+.gallery li:nth-of-type(5n)	{
 	margin-right: 0;
 }
 
-.gallery-entry a	{
+.gallery li a	{
 	display: block;
 	position: relative;
 	overflow: hidden;
-	width: 175px;
-	height: 175px;
 	background-color: #666;
 }
-.gallery-entry span	{
+.gallery li span	{
 	display: block;
-	width: 175px;
 	height: 24px;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -199,12 +167,14 @@ form {
 	margin-top: 10px;
 	font-weight: 300;
 }
-
-.gallery-entry a:hover img {
-	opacity: 0.4;
-	-webkit-filter: blur(1px); 
+.gallery li a img{
+	transition: .25s;
+	will-change: filter, -webkit-filter;
 }
-.gallery-entry a:before {
+.gallery li a:hover img {
+	-webkit-filter: blur(4px) saturate(1.2); 
+}
+.gallery li a:before {
 	content: " ";
 	background-image: url(media/expand.svg);
 	background-size: contain;
@@ -225,11 +195,12 @@ form {
 	
 	margin: -0.5em 0 0 -0.5em;
 }
-.gallery-entry.folder a:before {
+.gallery li.folder a:before {
 	content: " ";
+	opacity: .5;
 	background-image: url(media/folder.svg);
 }
-.gallery-entry:hover a:before	{
+.gallery li:hover a:before	{
 	opacity: 1;
 }
 img,a {
@@ -243,7 +214,7 @@ a:disabled	{
 	pointer-events: none;
 	color: red !important;
 }
-
+/*--- = FancyBox tweaks  */
 .fancybox-nav {
     width: 60px;       
 }

@@ -1,8 +1,5 @@
 <?php
-ini_set("gd.jpeg_ignore_warning", 1);
-
-class NeueGal
-{
+class NeueGal{
 	var $settings;
 	var $vars;
 
@@ -18,7 +15,7 @@ class NeueGal
 		}
 
     }
-
+	//Setup some important variables that will be available to the entire object
 	function loadVars() {
 		//Directories
 		$dir = array();
@@ -120,7 +117,7 @@ class NeueGal
 		
 	}
 //Content Generators
-	function makeImage($file){
+	function makeImage($image){
 		$imageFormat = $this->settings['theme']['image'];
 		$search = array(
 			'{{ThumbSize}}',
@@ -132,9 +129,9 @@ class NeueGal
 		
 		$replace = array(
 			$this->settings['general']['thumbnail_size'] . 'px',
-			pathinfo($file['name'])['filename'],
-			$file['path'],
-			$this->getThumbnailPath($file['path']),
+			pathinfo($image['name'])['filename'],
+			$image['path'],
+			$this->getThumbnailPath($image['path']),
 			"Placeholder Description"//$file['description']
 		);
 
@@ -390,20 +387,6 @@ class NeueGal
 			return $possibleCachedFilePath;
 		}
 
-	}
-	//Takes a path to an original file and a longest edge size, creates then caches or retrieves the image and then displays it
-	function displayThumbnail($path,$size){
-		if(is_file($targetCachedFileName)){
-			switch ($fileExtension){
-				case 'jpg':
-				case 'jpeg':
-					$this->displayImage(imagecreatefromjpeg($targetCachedFileName), $fileExtension);
-					$format = "jpeg";
-				case 'png':
-					$this->displayImage(imagecreatefrompng($targetCachedFileName), $fileExtension);
-					break;
-			}
-		}
 	}
 	//Takes a path to an original file, creates thumbnail and caches it
 	function generateThumbnail($originalImagePath){

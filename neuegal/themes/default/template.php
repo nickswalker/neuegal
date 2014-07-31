@@ -3,7 +3,7 @@
 <head>
 	<meta charset= "UTF-8">
 	<title><?php if($dir['current']!=''){ 
-				echo $vars['general']['page_title'] . ' | '. $settings['general']['site_name'];
+				echo $vars['general']['current_folder_name'] . ' | '. $settings['general']['site_name'];
 				} 
 			else{ 
 				echo $settings['general']['site_name'];
@@ -33,7 +33,12 @@
 </head>
 <body>
 	<div id="content">
-		<?php  $this->showGallery(); ?>
-		</div>
+		<header>
+			<h1><?php echo $settings['general']['site_name']; ?></h1>
+		</header>
+		<ul class="gallery">
+			<?php  $this->showGallery(); ?>
+		</ul>
+	</div>
 </body>
 </html>
