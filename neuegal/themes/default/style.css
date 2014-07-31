@@ -62,7 +62,7 @@ a:active {color:#555;}  /* selected link */
 	background: #CCC; /* Firefox */
 }
 body {
-	background-color: #000;
+	background-color: white;
 	width: 1075px;
 	margin: 45px auto;
 }
