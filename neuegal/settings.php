@@ -33,5 +33,4 @@ $this->settings['advanced']['debug_show_all'] = false;
 $this->settings['advanced']['jpeg_quality'] = 75; //0-100
 $this->settings['advanced']['thumbnail_expire'] = 172800; //Seconds
 $this->settings['advanced']['cache_expire'] = 86400; //Seconds
-$this->settings['advanced']['cache_path'] = 'neuegal/cache'; //Relative from index.php
 $this->settings['advanced']['custom_thumbnails_path'] = 'neuegal/custom-thumbs'; //Relative from index.php

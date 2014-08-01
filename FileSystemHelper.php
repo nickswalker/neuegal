@@ -26,26 +26,26 @@ class FileSystemHelper{
 		$files = array();
 		if ($dh = opendir($pathFromRoot)) {
 			while (($item = readdir($dh)) !== false) {
-				if (filetype($pathFromRoot . $item) == 'dir' && !FileSystemHelper::isInList($item, $folderBlacklist) ){
+				if (is_dir($pathFromRoot . $item) && !FileSystemHelper::isInList($item, $folderBlacklist) ){
 						$directories[] = array(
 							'path'=>normalizePath($path . $item),
 							'name'=>$item,
-							'description'=> "Placeholder"
+							'description'=> FileSystemHelper::getFolderDescription(normalizePath($pathFromRoot.$item))
 						);
 						
 						sort($directories);
 					}
 				else if (
-					filetype($pathFromRoot . $item) == 'file'
+					is_file($pathFromRoot . $item)
 					&& !FileSystemHelper::isInList($item, $fileBlacklist)
 					&& FileSystemHelper::isInList(pathinfo($item)['extension'], $fileTypes)
 					) {
 
 						$files[] = array(
-							'path'=>normalizePath($path . $item),
+							'path'=>$path . $item,
 							'name'=>$item,
 							'data'=>getimagesize($pathFromRoot . $item),
-							'description'=> "Placeholder"
+							'description'=> FileSystemHelper::getImageDescription($pathFromRoot.$item)
 						);
 						
 						sort($files);
@@ -61,17 +61,14 @@ class FileSystemHelper{
 			return $output;
 			
 	}
-	function getDirectoryDataFromCache($path, $cacheFilePath){
-		//If the folder is real, check the caches
-		//$currentCacheFile = $this->vars['dir']['cache_from_root'] . $path . 'cache.xml';
-		if (is_dir($path)) {
+	function getDirectoryDataFromCache($cacheFilePath){
 			
-			if ( is_file($cacheFilePath) ) {
-				if (  ( time() - filemtime($cacheFilePath) ) < 100000 ) {
-					$xml = new SimpleXMLElement(file_get_contents($cacheFilePath));
-					$files = FileSystemHelper::pullFilesFromCache($xml);
-					$directories = FileSystemHelper::pullFoldersFromCache($xml);
-				}
+		if ( is_file($cacheFilePath) ) {
+			if (  ( time() - filemtime($cacheFilePath) ) < 100000 ) {
+				$xml = new SimpleXMLElement(file_get_contents($cacheFilePath));
+				
+				$files = FileSystemHelper::pullImagesFromXML($xml);
+				$directories = FileSystemHelper::pullFoldersFromXML($xml);
 			}
 		}
 		$output['file'] = $files;
@@ -79,32 +76,34 @@ class FileSystemHelper{
 		
 		return $output;
 	}
-	static function pullFilesFromCache($xml){
+	private static function pullImagesFromXML($xml){
 		$i = 0;
-		$files = array();
+		$images = array();
 		
 		if (isset($xml->files)){
-			foreach($xml->files->file as $files){
-				$files[$i]['path'] = (string)$files->path;
-				$files[$i]['name'] = (string)$files->filename;
-				$files[$i]['data'][0] = (integer)$files->data->width;
-				$files[$i]['data'][1] = (integer)$files->data->height;
-				$files[$i]['data'][2] = (integer)$files->data->imagetype;
-				$files[$i]['data'][3] = (string)$files->data->sizetext;
+			foreach($xml->files->file as $image){
+				$images[$i]['path'] = (string)$image->path;
+				$images[$i]['name'] = (string)$image->name;
+				$images[$i]['data'][0] = (integer)$image->data->width;
+				$images[$i]['data'][1] = (integer)$image->data->height;
+				$images[$i]['data'][2] = (integer)$image->data->imagetype;
+				$images[$i]['data'][3] = (string)$image->data->sizetext;
+				$images[$i]['description'] = (string)$image->description;
 				
 				$i++;
 			}
 		}
-		return $files;
+		return $images;
 		
 	}
-	static function pullFoldersFromCache($xml){
+	private static function pullFoldersFromXML($xml){
 		$i = 0;
 		$directories = array();
 		if (isset($xml->directories)){
-			foreach($xml->directories->dir as $dirs){
-				$directories[$i]['path'] = (string)$dirs->path;
-				$directories[$i]['name'] = (string)$dirs->dirname;
+			foreach($xml->directories->dir as $dir){
+				$directories[$i]['path'] = (string)$dir->path;
+				$directories[$i]['name'] = (string)$dir->name;
+				$directories[$i]['description'] = (string)$dir->description;
 				
 				$i++;
 			}
@@ -112,16 +111,16 @@ class FileSystemHelper{
 		return $directories;
 	}
 	static function getImageDescription($path) {
-	
+		
 		$imageName = pathinfo($path)['filename'];
-		$imageDirectory = pathinfo($path)['dirname'];
+		$imageDirectory = normalizePath(pathinfo($path)['dirname']);
 		$possibleDescriptionPath =  $imageDirectory . $imageName . '.txt';
 		if( is_file($possibleDescriptionPath) ){
-			return (string)file_get_contents($possibleDescriptionPath);
+			return file_get_contents($possibleDescriptionPath);
 		}
-		return $output;
+		return null;
 	}
-	static function getDirectoryDescription($path){
+	static function getFolderDescription($path){
 		$possibleDescriptionPath = $path.'description.txt';
 		if( is_file($possibleDescriptionPath) ){
 			return (string)file_get_contents($possibleDescriptionPath);

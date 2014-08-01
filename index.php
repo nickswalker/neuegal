@@ -26,10 +26,4 @@ require('neuegal/NeueGal.php');
 
 $neuegal = new NeueGal;
 
-$neuegal->vars['version'] = '1.0';
-
-$neuegal->startTimer();
-
-$neuegal->loadSettings();
-$neuegal->initialize();
 ?>

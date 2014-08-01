@@ -6,68 +6,10 @@ class NeueGal{
 	var $fileSystemHelper;
 	
 	public function __construct() {
+		$this->vars['version'] = '1.1';
+		$this->startTimer();
 		$this->fileSystemHelper  = new FileSystemHelper(normalizePath(dirname($_SERVER['SCRIPT_FILENAME'])));
-    	
-	}
-
-	function loadSettings() {
-		if (is_file('neuegal/settings.php')){
-			require('neuegal/settings.php');
-		}
-
-		if (is_file('neuegal/themes/' . $this->settings['general']['theme'] . '/settings.php')){
-			require('neuegal/themes/' . $this->settings['general']['theme'] . '/settings.php');
-			
-			return true;
-		}
-
-    }
-	//Setup some important variables that will be available to the entire object
-	function loadVars() {
-		//Directories
-		$dir = array();
-		$dir['root'] = pathinfo($_SERVER['SCRIPT_NAME'])['dirname']; // The folder where index.php is
-		$dir['cache_from_root'] = $dir['root'] . $this->settings['advanced']['cache_path'];
-		
-		$dir['current'] = '';
-		//We listen to query strings to deduce the folder the user is going for
-		// forinstance: nickwalker.us/photos?hello  would mean they want to look into the folder /photos/hello
-		if($_SERVER['QUERY_STRING']){
-			$dir['current'] .= $_SERVER['QUERY_STRING'];
-			
-		}						
-		
-		$dir['current_from_root'] = $dir['root'] . $dir['current']; 	
-		$dir['current_parent_from_root'] = dirname($dir['current_from_root']);
-		$dir['root_from_server_root'] = dirname($_SERVER['SCRIPT_FILENAME']);
-		
-		foreach( $dir as $name=>$value){
-			$dir[$name] = normalizePath($dir[$name]);
-		}
-		$this->vars['dir'] = $dir;
-		$this->vars['general']['current_folder_name'] = $this->getDirectoryName($dir['current']);
-		$this->vars['general']['description'] = 
-
-		
-		
-		// Populates $this->vars['file_list'] and $this->vars['folder_list']
-		$this->loadDirectoryInformation($this->vars['dir']['current']);
-		
-	}
-	function loadDirectoryInformation($dir) {		
-		if ($directoryData = $this->fileSystemHelper->getDirectoryData( $dir)) {
-			if (count($directoryData['file']) > 0) { $this->vars['file_list'] = $directoryData['file']; }
-			if (count($directoryData['dir']) > 0) { $this->vars['folder_list'] = $directoryData['dir']; }
-	
-			$this->cacheDirectory($dir);
-		
-			
-			return true;
-		} else {
-			return false;
-		}
-	}
-	function initialize(){	
+		$this->loadSettings();
 			
 		//Debug Mode		
 		if ($this->settings['advanced']['debug_mode'] == true)
@@ -98,6 +40,67 @@ class NeueGal{
 				echo "</pre>";
 			}
 		}
+    	
+	}
+
+	function loadSettings() {
+		if (is_file('neuegal/settings.php')){
+			require('neuegal/settings.php');
+		}
+
+		if (is_file('neuegal/themes/' . $this->settings['general']['theme'] . '/settings.php')){
+			require('neuegal/themes/' . $this->settings['general']['theme'] . '/settings.php');
+			
+			return true;
+		}
+
+    }
+	//Setup some important variables that will be available to the entire object
+	function loadVars() {
+		//Directories
+		$dir = array();
+		$dir['root'] = pathinfo($_SERVER['SCRIPT_NAME'])['dirname']; // The folder where index.php is
+		$dir['cache'] = 'neuegal/cache'; //Relative from index.php
+		$dir['cache_from_root'] = $dir['root'] . $dir['cache'];
+		
+		$dir['current'] = '';
+		//We listen to query strings to deduce the folder the user is going for
+		// forinstance: nickwalker.us/photos?hello  would mean they want to look into the folder /photos/hello
+		if($_SERVER['QUERY_STRING']){
+			$dir['current'] .= $_SERVER['QUERY_STRING'];
+			
+		}						
+		
+		$dir['current_from_root'] = $dir['root'] . $dir['current']; 	
+		$dir['current_parent_from_root'] = dirname($dir['current_from_root']);
+		$dir['root_from_server_root'] = dirname(__DIR__);
+		
+		foreach( $dir as $name=>$value){
+			$dir[$name] = normalizePath($dir[$name]);
+		}
+		$this->vars['dir'] = $dir;
+		$this->vars['general']['current_folder_name'] = $this->getDirectoryName($dir['current']);
+		$this->vars['general']['description'] = FileSystemHelper::getFolderDescription($dir['root_from_server_root'] . $dir['current']);
+
+		// Populates $this->vars['file_list'] and $this->vars['folder_list']
+		$this->loadDirectoryInformation($this->vars['dir']['current']);
+		
+		//var_dump($this->vars);
+		
+	}
+	function loadDirectoryInformation($path) {
+		//If the folder is real, check the caches
+		$currentCacheFileFromRoot = $this->vars['dir']['root_from_server_root'] . $this->vars['dir']['cache_from_root'] . $path . 'cache.xml';
+		if (is_file($currentCacheFileFromRoot)){
+			$directoryData = $this->fileSystemHelper->getDirectoryDataFromCache($currentCacheFileFromRoot);
+		}	
+		else {
+			$directoryData = $this->fileSystemHelper->getDirectoryData( $path);
+			$this->cacheDirectory($path, $directoryData['file'],$directoryData['dir']);
+		}
+		
+		if (count($directoryData['file']) > 0) { $this->vars['file_list'] = $directoryData['file']; }
+		if (count($directoryData['dir']) > 0) { $this->vars['folder_list'] = $directoryData['dir']; }
 	}
 	function showGallery(){
 		$return_string = '';
@@ -133,16 +136,16 @@ class NeueGal{
 			pathinfo($image['name'])['filename'],
 			$image['path'],
 			$this->getThumbnailPath($image['path']),
-			"Placeholder Description"//$file['description']
+			$image['description']
 		);
 
 		return str_replace($search, $replace, $imageFormat);
 	}
-	function makeFolder($directory){
+	function makeFolder($folder){
 		$folderFormat = $this->settings['theme']['folder']; 
-		$fullPathToDir = $this->vars['dir']['root_from_server_root'] . $directory['path'];
+		$fullPathToDir = $this->vars['dir']['root_from_server_root'] . $folder['path'];
 		//Grab the directory info
-		$directoryData = $this->fileSystemHelper->getDirectoryData($directory['path']);
+		$directoryData = $this->fileSystemHelper->getDirectoryData($folder['path']);
 		
 		if ($this->settings['general']['random_folder_thumbnail'] == true) { shuffle($directoryData['file']); }
 		
@@ -163,57 +166,51 @@ class NeueGal{
 			);
 		$replace = array(
 			$this->settings['general']['thumbnail_size'] . 'px',
-			$directory['name'],
-			'?'.$directory['name'],
+			$folder['name'],
+			'?'.$folder['name'],
 			$thumb_url,
-			'Placeholder Folder Description'//$dir['description']
+			$folder['description']
 		);
 
 		return str_replace($search, $replace, $folderFormat);
 	}
 	
 
-	function cacheDirectory($dir) {
+	function cacheDirectory($dir, $files, $directories) {
 		$cacheFolderFromRoot = $this->vars['dir']['root_from_server_root'] . $this->vars['dir']['cache_from_root'];
-		$cache_exists = false;
 		
-		if ( isset($this->vars['folder_list']) or isset($this->vars['file_list']) ) {
-			$cache_exists = $this->generateCacheDirectory($dir);
+		if ( isset($directories) || isset($files) ) {
+			$cacheDirectoryExists = $this->generateCacheDirectory($dir);
 			
-			if ($cache_exists == true)
-			{
+			if ($cacheDirectoryExists){
 				$xmlstr = "<?xml version='1.0' ?>\n<cache></cache>";
 				$xml = new SimpleXMLElement($xmlstr);
 				
-				if (isset($this->vars['folder_list']))
-				{
+				if (isset($directories) ){
 					$xml_dir = $xml->addChild('directories');
 					
-					foreach($this->vars['folder_list'] as $dirs)
-					{
+					foreach($directories as $dirs){
 						$xml_dirs_data = $xml_dir->addChild('dir');
 						$xml_dirs_data->addChild('path', $dirs['path']);
-						$xml_dirs_data->addChild('dirname', $dirs['name']);
-						if (isset($dirs['description'])) {$xml_dirs_data->addChild('description', $dirs['description']);}
+						$xml_dirs_data->addChild('name', $dirs['name']);
+						$xml_dirs_data->addChild('description', $dirs['description']);
 					}
 				}
 				
-				if (isset($this->vars['file_list']))
-				{
+				if (isset($files)){
 					$xml_files = $xml->addChild('files');
 					
-					foreach($this->vars['file_list'] as $files)
-					{
+					foreach($files as $files){
 						$xml_files_data = $xml_files->addChild('file');
 						$xml_files_data->addChild('path', $files['path']);
-						$xml_files_data->addChild('filename', $files['name']);
+						$xml_files_data->addChild('name', $files['name']);
 						
 						$xml_data = $xml_files_data->addChild('data');
 						$xml_data->addChild('width', $files['data'][0]);
 						$xml_data->addChild('height', $files['data'][1]);
 						$xml_data->addChild('imagetype', $files['data'][2]);
 						$xml_data->addChild('sizetext', $files['data'][3]);
-						if (isset($files['description'])) { $xml_data->addChild('description', $files['description']); }
+						$xml_data->addChild('description', $files['description']);
 		
 					}
 				}
@@ -221,12 +218,9 @@ class NeueGal{
 				$xml->asXML($cacheFolderFromRoot . $dir . 'cache.xml');
 				return true;
 				
-			} else {
-				return false;
-			}
-		} else {
-			return false;
-		}
+			} 
+		} 
+		return false;
 	}
 	
 	function generateCacheDirectory($directory) {
@@ -266,7 +260,6 @@ class NeueGal{
 	
 	//Checks to see if a thumbnail already exists, if not it creates one and returns the path to it in the cache
 	function getThumbnailPath($path) {
-		
 		$directory = pathinfo($path)['dirname'];
 		
 		//A singal dot signifies the current directory, however, that's inconvenient for our purpose
@@ -274,15 +267,16 @@ class NeueGal{
 			$directory = "";
 		}
 		$directory = normalizePath("$directory");
+		
 		$fileName = pathinfo($path)['filename'];
 		$fileExtension = pathinfo($path)['extension'];
-		$possibleCachedFilePath = $this->vars['dir']['cache_from_root'] . $directory . $fileName . '_' . $this->settings['general']['thumbnail_size'] . '.' . $fileExtension;
-		$possibleCachedFilePathFromRoot =  substr($this->vars['dir']['root_from_server_root'], 0, -1) . $possibleCachedFilePath;
-		
-		$getThumbnailPath = '?thumb=' . $directory . $fileName . '.' . $fileExtension . '&size=' . $this->settings['general']['thumbnail_size'];
+		$possibleCachedFilePath = $this->vars['dir']['cache'] . $directory . $fileName . '_' . $this->settings['general']['thumbnail_size'] . '.' . $fileExtension;
+		$possibleCachedFilePathFromRoot =  $this->vars['dir']['root_from_server_root'] . $possibleCachedFilePath;
+
 		$possibleCustomThumbPath = $this->settings['advanced']['custom_thumbnails_path'] . $directory . $fileName . '.' . $fileExtension;
 	
 		$originalimagepath = $path;
+		
 		if ( is_file($possibleCustomThumbPath) ){
 			return $possibleCustomThumbPath;
 		}
@@ -298,6 +292,9 @@ class NeueGal{
 	}
 	//Takes a path to an original file, creates thumbnail and caches it
 	function generateThumbnail($originalImagePath){
+	
+		$originalImagePathFromRoot = $this->vars['dir']['root_from_server_root'] . $originalImagePath;	
+		
 		$filename = pathinfo($originalImagePath)['filename'];
 		$fileExtension = pathinfo($originalImagePath)['extension'];
 		$directory = pathinfo($originalImagePath)['dirname'];
@@ -317,11 +314,11 @@ class NeueGal{
 		switch ($fileExtension){
 			case 'jpg':
 			case 'jpeg':
-				$image = imagecreatefromjpeg($originalImagePath);
+				$image = imagecreatefromjpeg($originalImagePathFromRoot);
 				$format = "jpeg";
 				break;
 			case 'png':
-				$image = imagecreatefrompng($originalImagePath);
+				$image = imagecreatefrompng($originalImagePathFromRoot);
 				break;
 		}
 		
