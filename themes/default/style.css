@@ -137,8 +137,8 @@ header h1 a{
 	background-color: #666;
 	display: block;
 	background-size: cover;
-	height: 33vw;
-	width: 33vw;
+	height: 33.33vw;
+	width: 33.33vw;
 }
 .gallery li span	{
 	display: block;

@@ -114,16 +114,6 @@ The `template.php` in your theme's folder is where you can change the page as a 
 
 Look to the default theme's template for an example of how to create a cohesive structure with this information.
 
-
-````html
-<title><?php echo $bio['name'];?> | <?php echo $bio['email'];?></title>
-````
-
-You also have access to any settings you've specified through `$settings`.
-
-To display the sections of your resume, call `$this->displaySections()`. All `section` nodes in your resume.xml will be parsed using the formats you've specified and printed out.
-
-
 Issues
 ------
 
