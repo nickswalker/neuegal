@@ -1,35 +1,14 @@
 <?php
-/*
-NeueGal 1.0
---------------------------
-Created by: Nick Walker (http://nickswalker.com)
-Site: http://neuegal.nickswalker.com
-Licence: GNU General Public License v3                   		 
 
-This file is part of NeueGal.
+require 'vendor/autoload.php'; //Don't try to make these paths absolute (begin with a /) unless you know what you're doing.
 
-NeueGal is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+$themePathFromRoot = realpath('themes/default'); //Where is your theme?
+												 //Note that the theme MUST be in a publicly accesible directory!
+												 //Otherwise your CSS won't load :(
+												 
+$photosPathFromRoot = realpath('Sample Gallery'); //Where are the photos you want to use?
 
-NeueGal is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with NeueGal. If not, see <http://www.gnu.org/licenses/>.
-*/
+$neuegal = new \Nickswalker\NeueGal\NeueGal( $themePathFromRoot, $photosPathFromRoot);
 
-require('neuegal/neuegal.php');
-
-$neuegal = new NeueGal;
-
-$neuegal->vars['version'] = '1.0';
-
-$neuegal->startTimer();
-
-$neuegal->loadSettings();
-$neuegal->initialize();
-?>
+$neuegal->display();
