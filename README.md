@@ -1,185 +1,128 @@
 NeueGal
 =======
 
-A simple, no-database PHP image gallery. Neuegal is a fork of the fantastic [PHPPI](http://code.google.com/p/phppi/) 
-which aims to make it easy to create simple galleries for photography portfolios or other purposes. Think of it as a 
-bare bones Apache index for photos, except it looks great out of the box and has simple to use theming support so you 
-can integrate it with your existing designs. Comes with [Fancybox](http://fancyapps.com/fancybox/) built in.
+<img src="example.png" title="Example gallery using the default theme." />
 
-More information and examples: http://nickswalker.github.com/neuegal/
+A simple, no-database, PHP image gallery. Lightweight and lighting fast. See a live demo [here](http://ineswalker.com/).
+
+Features:
+* Upload over FTP. No convoluted admin interface.
+* Nested folders
+* Supports JPEGs and PNGs
+* Gorgeous default theme lets your images shine
+* Responsive; looks great on mobile
+* Optional custom image descriptions and folder descriptions using text files
+* Autogenerate thumbnails, or use your own custom ones (or do both at the same time)
+* Fully themable...
+* Or just tweakable with simple custom CSS
 
 Installation
 ------
 
-Just unzip the download into any directory on a PHP 5.2 or above enabled server and you'll have a working gallery that will
-display the included directory of sample images. 
+###With Composer
+
+Add `nickswalker/neuegal` to your `composer.json`'s require section. Run `composer update`. You should now have access to `\Nickswalker\NeueGal\NeueGal`, the main class of the project. Construct a NeueGal object with a complete path to your resume.xml and some additional path parameters. Here's a base implementation that will function for an installation at the root of a server:
+
+````php
+require 'vendor/autoload.php';
+
+$themePathFromRoot = realpath('themes/default'); //Where is your theme?
+												 //Note that the theme MUST be in a publicly accesible directory!
+												 //Otherwise your CSS won't load :(
+$galleryPathFromRoot = realpath('Sample Gallery');
+
+$neuegal = new \Nickswalker\NeueGal\NeueGal($themePathFromRoot, $galleryPathFromRoot);
+
+$neuegal->display();
+````
+
+You will need to move the index.php, resume.xml, themes folder, and the Sample Gallery folder from the `vendor` directory where composer puts them into wherever you want to make your resume available, otherwise updating using `composer update` will overwrite the files. Note that the theme directory and photos directoris *must* be publicly accessible on your server. Modify the the paths in the index.php with your changes.
+
+###Without Composer
+
+Go to the releases tab above and download the archive of the latest release. Dowloading the source straight from GitHub *will not work* because it won't include the composer autlooad files. Unzip it into your desired install location on a server running PHP 5.3 or above enabled server and you'll be up and running.
+
 
 Usage
 ------
-####Adding Images and Files
-Simply add images or folders to the directory and your gallery will update
+###Adding Images and Files
+If you don't enjoy the included gallery of flower photos (from yours truly ;) ), you can clear it out. Simply add images or folders to the directory over FTP and your gallery will update
 to display them just like you'd imagine. Note however that directory information is cached and you may have to delete the
-cache.xml to get the server to regenerate the directory information.
+cache folder within your photos directory to get the server to update immediately.
 
-####Adding Image Descriptions
-Image descriptions are dynamically retrieved from the JPEG Comment header in the file if it is set.
+###Adding Descriptions
+Image descriptions are dynamically retrieved from a `.txt` file in your photos directory. So, to add a description to `flower.jpg`, you would create `flower.txt` in the same directory that the photo is stored in. Folder descriptions are dynamically retrieved from a `description.txt` file in a given directory.
 
-####Adding Folder Descriptions
-Folder descriptions are dynamically retrieved from a `description.txt` file in a given directory .
-
-####Overiding Dynamically Generated thumbnails
-NeueGal will generate and cache thumbnails automatically. If you would like to provide a custom thumbnail simply upload it
-with the same filename as it's full size companion into the `neuegal/thumbs/` directory,
+###Overiding Dynamically Generated Thumbnails
+NeueGal will generate and cache thumbnails into a cache folder within your photos directory. If you want more control, you can create your own thumbnail and upload it into the `custom-thumbnails` directory within your gallery. For example, if you wanted to create a thumbnail for `mygallery/nested folder/flower.png` you would create a thumbnail at `mygallery/custom thumnails/nested folder/flower.png`.
 
 Settings
 ------
 
-Within the `neuegal` directory of your chosen gallery directory, you'll find `settings.php`. Here you can configure a handful
-of settings, which are listed below. Any setting can be set in either the root `settings.php` or a settings file at the
-root of a theme (though some are more useful in one place than the other). All of these functions 
-are part of the NeueGal class under the settings object and can be accessed in theme files with 
-`$this->settings` as a prefix.
+Within your theme's directory you'll find a `settings.php` file which selectively overides settings in the root settings file located in the src folder. Do not tweak settings in the root file because all changes will be overwritten during updates.
 
-###General
-<table>
-  <tr>
-    <td>`site_name`</td><td>Name of site</td>
-  </tr>
-  <tr>
-    <td>`theme`</td><td>Folder name of the theme to use</td>
-  </tr>
-  <tr>
-    <td>`thumb_file_ext`</td><td>File extention of manually created and uploaded thumbnails</td>
-  </tr>
-  <tr>
-    <td>`thumb_folder_show_thumbs`</td><td>Show a thumbnail for folders</td>
-  </tr>
-  <tr>
-    <td>`thumb_folder_shuffle`</td><td>Boolean. Whether folder thumbnails should randomized or not</td>
-  </tr>
-  <tr>
-    <td>`thumb_size`</td><td>Max width or height of generated thumbnail</td>
-  </tr>
-  <tr>
-    <td>`thumb_folder_use_cache_only`</td><td>Force cache data only, if no cache exists then no thumbnails are shown for the folder (Can drastically improve performance on large folders)</td>
-  </tr>
-</table>
-
-###Advanced
-<table>
-  <tr>
-    <td>`debug_mode`</td><td>Boolean. Display errors and notices</td>
-  </tr>
-  <tr>
-    <td>`debug_show_all`</td><td>Boolean. Shows all variables and information regarding current page</td>
-  </tr>
-  <tr>
-    <td>`cyrillic_support`</td><td>Boolean. Enable support for cyrillic characters in folder names. Also helps with certain symbols</td>
-  </tr>
-  <tr>
-    <td>`use_gzip_compression`</td><td>'on' or 'off'. Enable gzip compression of html where possible</td>
-  </tr>
-  <tr>
-    <td>`gzip_compression_level`</td><td>0 to 9 (9 being most compression)</td>
-  </tr>
-  <tr>
-    <td>`use_gd`</td><td>Boolean. Enable GD thumbnail creation (dynamic thumbnails)</td>
-  </tr>
-  <tr>
-    <td>`use_gd_cache`</td><td>Boolean. Cache thumbnails so they aren't recreated on every page load</td>
-  </tr>
-  <tr>
-    <td>`jpeg_quality`</td><td>0 to 100. JPEG thumbnail quality</td>
-  </tr>
-  <tr>
-    <td>`gd_cache_expire`</td><td>Seconds till expire</td>
-  </tr>
-  <tr>
-    <td>`expire_file_cache`</td><td>Seconds till expire</td>
-  </tr>
-  <tr>
-    <td>`cache_folder`</td><td>Where you want to store your cached xml and thumbnail files. Relative to NeueGal install folder</td>
-  </tr>
-  <tr>
-    <td>`thumbs_folder`</td><td>Where you want to store your non GD thumbnails. Relative to NeueGal install folder</td>
-  </tr>
-</table>
 
 Theming
 ------
 
-NeueGal features a dead simple theming system that should make 95% of what you need to do very simple. Several functions
-exist that accept a string with placeholders as a parameter and return that string with the relevant content inserted.
-All of these functions are part of the NeueGal class and should be accesed within the
-theme files with `$this->` as a prefix.
+###"I just want to tweak some things"
 
-###`showGallery($folderFormat, $imageFormat)`
-####`$folderFormat`
-<table>
-  <tr>
-    <td>{{ThumbSize}}</td><td>Size of thumbnail in pixels</td>
-  </tr>
-  <tr>
-    <td>{{FolderTitle}}</td><td>Title of folder</td>
-  </tr>
-  <tr>
-    <td>{{Link}}</td><td>URL to the directory</td>
-  </tr>
-  <tr>
-    <td>{{ThumbURL}}</td><td>URL to thumbnail</td>
-  </tr>
-  <tr>
-    <td>{{ThemePath}}</td><td>Path to current theme</td>
-  </tr>
-  <tr>
-    <td>{{Description}}</td><td>Any text in a file name `description.txt` in the directory</td>
-  </tr>
-</table>
-####`$imageFormat`
-<table>
-  <tr>
-    <td>{{ThumbSize}}</td><td>Size of thumbnail in pixels</td>
-  </tr>
-  <tr>
-    <td>{{ImageTitle}}</td><td>Text taken from image file name</td>
-  </tr>
-  <tr>
-    <td>{{Link}}</td><td>URL to the directory</td>
-  </tr>
-  <tr>
-    <td>{{ThumbURL}}</td><td>URL to thumbnail</td>
-  </tr>
-  <tr>
-    <td>{{ThemePath}}</td><td>Path to current theme</td>
-  </tr>
-  <tr>
-    <td>{{Description}}</td><td>Description included in the JPEG Comment header for image.</td>
-  </tr>
-</table>
+Easy! Add a `custom-style.css` file to the folder where you keep your photos and it will be loaded automatically.
 
-###`showLoadInfo($loadInfoFormat)`
-<table>
-  <tr>
-    <td>{{Version}}</td><td>Version of the NeueGal script running</td>
-  </tr>
-  <tr>
-    <td>{{LoadTime}}</td><td>Duration of script execution in seconds</td>
-  </tr>
-</table>
+###"I want to write an entirely custom theme"
 
-###`showTitle($titleFormat)`
-<table>
-  <tr>
-    <td>{{SiteName}}</td><td>Text specified in `settings.php`</td>
-  </tr>
-  <tr>
-    <td>{{PageTitle}}</td><td>Name of current directory</td>
-  </tr>
-</table>
-###`showError()`
-Just outputs error string.
-###`showError()`
-Just outputs link to the parent directory.
+The default theme is an example of how flexible NeueGal is. That being said, the aim of project is to be as light weight as possible, and this means forgoing any dependencies, including a templating engine. The built in parsing and templating are not as robust as many PHP frameworks that are dedicated to that purpose, but they are _decent_.
+
+####Getting Started
+
+Create a folder in the themes directory. Make sure that the path to this directory is passed in when your initialize NeueGal. Create a `settings.php` and a `template.php` file in your theme's directory and you're in business.
+
+####Changing Formatting
+
+You can overide the HTML structure that NeueResume puts XML elements into by setting the following indexes in the settings array:
+
+````php
+return array(
+    'theme' => array(
+		'imageFormat' => $imageFormat,
+		'folderFormat' => $folderFormat
+		)
+);
+````
+
+Note that you can override _any_ settings within this file (or even make up some of your own, which will become accessible through the `$settings` variable passed into your template when it is processed). The default string for the `imageFormat` index (which can be found in the root `settings.php` file) looks like this:
+
+````html
+<li>
+	<a title="{{Title}} {{Description}}" class="thumb-container" href="{{Path}}" >
+		<img src="{{ThumbPath}}" alt="{{Title}}" />
+	</a>
+</li>
+````
+Double braced words are replaced by the content of their corresponding node for the `item` being processed. The default `folderFormat` is very similar.
+
+####Change Page Structure
+
+The `template.php` in your theme's folder is where you can change the page as a whole. Treat it like an HTML file from which you can call into PHP for some important variables. `<?php $this->showGallery();?>` will output the images and folders of the current directory processed into your theme's specified HTML formats. You have access to any settings you've created on a `$settings` array that is passed in to the template. Additionally, you have access to some useful values on a `$vars` array. Here's a `var_dump` of `$vars` when accessing `mygallery/Nested Folder/` where the gallery root is also the document root of the server:
+
+````php
+	[current_directory] => Nested Folder/
+    [gallery_url] => /
+    [current_folder_name] => Nested Folder
+    [description] => That's right, folders in folders
+````
+
+Look to the default theme's template for an example of how to create a cohesive structure with this information.
+
+
+````html
+<title><?php echo $bio['name'];?> | <?php echo $bio['email'];?></title>
+````
+
+You also have access to any settings you've specified through `$settings`.
+
+To display the sections of your resume, call `$this->displaySections()`. All `section` nodes in your resume.xml will be parsed using the formats you've specified and printed out.
+
 
 Issues
 ------

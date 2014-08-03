@@ -28,7 +28,7 @@ footer, header, hgroup, menu, nav, section {
 }
 body {
     line-height: 1.5;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Open Sans','Helvetica Neue', Helvetica, Arial, sans-serif;
     color: black;
     
 }
@@ -63,45 +63,7 @@ a:active {color:#555;}  /* selected link */
 }
 body {
 	background-color: black;
-}
-#content	{
-	overflow: auto;
-	height: auto;
-}
-footer	{
 	font-weight: 300;
-	visibility: hidden;
-}
-h1	{
-	float: left;
-	margin: 0;
-	font-size: 36px;
-	font-weight: 600;
-	padding: 0;
-}
-nav	{
-	float: right;
-	display: inline-block;
-	padding-top: 10px;
-}
-nav li	{
-	display: inline-block;
-}
-nav li a	{
-	text-decoration: none;
-	color: black;
-	vertical-align: middle;
-	text-transform: uppercase;
-	font-weight: 100;
-	font-size: 24px;
-	margin-left: 20px;
-}
-header	{
-	overflow: auto;
-	width: 100%;
-	background-color: white;
-	box-sizing: border-box;
-
 }
 img {
 	vertical-align: bottom;
@@ -110,22 +72,45 @@ img {
 form {
 	display: inline;
 }
-
+/* For debugging */
+pre	{
+	background-color: white;
+}
 
 /* = Header
 -------------------------------------------------------------- */
 
 header	{
-	font-size: 24px;
-	font-weight: 500;
 	display: block;
-	padding: 12px;
+	padding: 8px 12px;
 	box-sizing: border-box;
-	background-color: rgba(190,190,190,.5);
+	background-color: rgba(255,255,255, .5);
 	overflow: auto;
 	position: relative;
 	color: white;
 	z-index: 9;
+	margin: 0;
+	vertical-align: baseline;
+}
+header h1{
+	font-weight: 700;
+	display: inline-block;
+	float: left;
+}
+header h1 a:visited,
+header h1 a:link,
+header h1 a:hover,
+header h1 a{
+	text-decoration: none;
+	color: inherit;
+	
+}
+.folder-title{
+	float: left;
+	display: inline-block;
+}
+.description	{
+	float: right;
 }
 
 /* = Gallery
@@ -145,18 +130,15 @@ header	{
 	-webkit-flex: 0 1 auto;
 	flex: 0 1 auto;
 }
-.gallery li.folder	{
-
-}
-.gallery li:nth-of-type(5n)	{
-	margin-right: 0;
-}
-
-.gallery li a	{
+.gallery li a{
 	display: block;
 	position: relative;
 	overflow: hidden;
 	background-color: #666;
+	display: block;
+	background-size: cover;
+	height: 33vw;
+	width: 33vw;
 }
 .gallery li span	{
 	display: block;
@@ -167,42 +149,36 @@ header	{
 	margin-top: 10px;
 	font-weight: 300;
 }
-.gallery li a img{
-	transition: .25s;
-	will-change: filter, -webkit-filter;
+.gallery li.folder a::after{
+	content: "";
+	top: 0;
+	right: 0;
+	left: 0;
+	bottom: 0;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0,0,0,.5);
 }
-.gallery li a:hover img {
-	-webkit-filter: blur(4px) saturate(1.2); 
-}
-.gallery li a:before {
+
+.gallery li.folder a::before {
 	content: " ";
-	background-image: url(media/expand.svg);
+	background-image: url('folder.svg');
 	background-size: contain;
+	position: absolute;
 	display: block;
 	font-size: 40px;
 	line-height: 1em;
 	height: 1em;
 	width: 1em;
-	text-align: center;
-	opacity: 0;
-	color: #fff;
+	bottom: 10px;
+	left: 10px;
+	opacity: .9;
+	color: white;
 	font-weight: bold;
-	
-	position: absolute;
-	top: 50%;
-	left: 50%;
 	z-index: 1;
-	
-	margin: -0.5em 0 0 -0.5em;
 }
-.gallery li.folder a:before {
-	content: " ";
-	opacity: .5;
-	background-image: url(media/folder.svg);
-}
-.gallery li:hover a:before	{
-	opacity: 1;
-}
+
 img,a {
 	-webkit-transition: opacity 0.2s;  /* Saf3.2+, Chrome */
 	-moz-transition: opacity 0.2s ;  /* FF4+ */
@@ -229,4 +205,27 @@ a:disabled	{
 
 .fancybox-prev {
     left: -100px;
+}
+/* = Media Queries
+-------------------------------------------------------------- */
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+
+
+}
+
+@media screen and (min-width: 900px) {
+	.gallery li a	{
+		height: 20vw;
+		width: 20vw;
+	}
+}
+
+@media screen and (min-width: 1220px) {
+
+	.gallery li a	{
+		height: 14.285vw;
+		width: 14.285vw;
+	}
+
 }

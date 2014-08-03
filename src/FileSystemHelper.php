@@ -1,24 +1,33 @@
 <?php
 
+namespace Nickswalker\NeueGal;
+
 //Handles all caching, all file system polling and saving
 class FileSystemHelper{
+
+	var $publicFromRoot;
+	var $themePathFromRoot;
+	var $packagePathFromRoot; //Location of NeueGal.php
+	var $galleryPathFromRoot;
 	
-	public function __construct($installationRoot) {
-    	$this->installationRoot = normalizePath($installationRoot);
+	public function __construct($publicFromRoot, $themePathFromRoot, $galleryPathFromRoot) {
+    	$this->publicPathFromRoot = normalizePath($publicFromRoot);
+		$this->themePathFromRoot = normalizePath($themePathFromRoot);
+		$this->packagePathFromRoot = dirname(__FILE__) . '/';
+		$this->galleryPathFromRoot = normalizePath($galleryPathFromRoot);
     	
 	}
-	
+	// RETRIEVAL
 	//Takes an installation relative path and returns an array of all folders and images with additional information
-	function getDirectoryData($path) {
-		$pathFromRoot = $this->installationRoot . $path;
+	function getDirectoryData($pathFromRoot) {
 	
-		$fileBlacklist = file_get_contents('neuegal/file_blacklist.txt');
+		$fileBlacklist = file_get_contents($this->packagePathFromRoot . 'file_blacklist.txt');
 		$fileBlacklist = explode(",", $fileBlacklist);
 		
-		$folderBlacklist = file_get_contents('neuegal/folder_blacklist.txt');
+		$folderBlacklist = file_get_contents($this->packagePathFromRoot . 'folder_blacklist.txt');
 		$folderBlacklist = explode(",", $folderBlacklist);
 		
-		$fileTypes = file_get_contents('neuegal/file_types.txt');
+		$fileTypes = file_get_contents($this->packagePathFromRoot . 'file_types.txt');
 		$fileTypes = explode(",", $fileTypes);
 		
 		$output = array();
@@ -28,7 +37,7 @@ class FileSystemHelper{
 			while (($item = readdir($dh)) !== false) {
 				if (is_dir($pathFromRoot . $item) && !FileSystemHelper::isInList($item, $folderBlacklist) ){
 						$directories[] = array(
-							'path'=>normalizePath($path . $item),
+							'path'=>normalizePath($pathFromRoot . $item),
 							'name'=>$item,
 							'description'=> FileSystemHelper::getFolderDescription(normalizePath($pathFromRoot.$item))
 						);
@@ -42,12 +51,14 @@ class FileSystemHelper{
 					) {
 
 						$files[] = array(
-							'path'=>$path . $item,
+							'path'=>$pathFromRoot . $item,
 							'name'=>$item,
-							'data'=>getimagesize($pathFromRoot . $item),
+							'data'=>array(
+								'width' => getimagesize($pathFromRoot . $item)[0],
+								'height' => getimagesize($pathFromRoot . $item)[1]
+							),
 							'description'=> FileSystemHelper::getImageDescription($pathFromRoot.$item)
 						);
-						
 						sort($files);
 					}
 				}
@@ -65,7 +76,7 @@ class FileSystemHelper{
 			
 		if ( is_file($cacheFilePath) ) {
 			if (  ( time() - filemtime($cacheFilePath) ) < 100000 ) {
-				$xml = new SimpleXMLElement(file_get_contents($cacheFilePath));
+				$xml = new \SimpleXMLElement(file_get_contents($cacheFilePath));
 				
 				$files = FileSystemHelper::pullImagesFromXML($xml);
 				$directories = FileSystemHelper::pullFoldersFromXML($xml);
@@ -79,15 +90,12 @@ class FileSystemHelper{
 	private static function pullImagesFromXML($xml){
 		$i = 0;
 		$images = array();
-		
 		if (isset($xml->files)){
 			foreach($xml->files->file as $image){
 				$images[$i]['path'] = (string)$image->path;
 				$images[$i]['name'] = (string)$image->name;
-				$images[$i]['data'][0] = (integer)$image->data->width;
-				$images[$i]['data'][1] = (integer)$image->data->height;
-				$images[$i]['data'][2] = (integer)$image->data->imagetype;
-				$images[$i]['data'][3] = (string)$image->data->sizetext;
+				$images[$i]['data']['width'] = (integer)$image->data->width;
+				$images[$i]['data']['height'] = (integer)$image->data->height;
 				$images[$i]['description'] = (string)$image->description;
 				
 				$i++;
@@ -126,6 +134,63 @@ class FileSystemHelper{
 			return (string)file_get_contents($possibleDescriptionPath);
 		}
 		return null;
+	}
+	
+	// CACHERS
+	
+	function cacheDirectory($directory, $files, $directories) {
+		$cacheFolderFromRoot = $this->galleryPathFromRoot . 'cache/';
+
+		if ( isset($directories) || isset($files) ) {
+			$cacheDirectoryExists = $this->generateCacheDirectory($directory);
+			
+			if ($cacheDirectoryExists){
+				$xmlstr = "<?xml version='1.0' ?>\n<cache></cache>";
+				$xml = new \SimpleXMLElement($xmlstr);
+				
+				if (isset($directories) ){
+					$xml_dir = $xml->addChild('directories');
+					
+					foreach($directories as $dir){
+						$xml_dirs_data = $xml_dir->addChild('dir');
+						$xml_dirs_data->addChild('path', $dir['path']);
+						$xml_dirs_data->addChild('name', $dir['name']);
+						$xml_dirs_data->addChild('description', $dir['description']);
+					}
+				}
+				
+				if (isset($files)){
+					$xml_files = $xml->addChild('files');
+					
+					foreach($files as $file){
+						$xml_files_data = $xml_files->addChild('file');
+						$xml_files_data->addChild('path', $file['path']);
+						$xml_files_data->addChild('name', $file['name']);
+						$xml_files_data->addChild('description', $file['description']);
+						
+						$xml_data = $xml_files_data->addChild('data');
+						$xml_data->addChild('width', $file['data']['width']);
+						$xml_data->addChild('height', $file['data']['height']);
+						
+		
+					}
+				}
+				
+				$xml->asXML($cacheFolderFromRoot . $directory . 'cache.xml');
+				return true;
+				
+			} 
+		} 
+		return false;
+	}
+	
+	function generateCacheDirectory($directory) {
+	
+		$desiredCachePath = $this->galleryPathFromRoot ."cache/" . $directory;
+		if (!file_exists($desiredCachePath)) {
+				return mkdir($desiredCachePath, 0777, true);
+			}
+		return true;
 	}
 	//String Helpers
 	
