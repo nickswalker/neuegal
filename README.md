@@ -57,7 +57,7 @@ Image descriptions are dynamically retrieved from a `.txt` file in your photos d
 
 
 ###Overiding Dynamically Generated Thumbnails
-NeueGal will generate and cache thumbnails into a cache folder within your photos directory. If you want more control, you can create your own thumbnail and upload it into the `custom-thumbnails` directory within your gallery. For example, if you wanted to create a thumbnail for `mygallery/nested folder/flower.png` you would create a thumbnail at `mygallery/custom thumnails/nested folder/flower.png`.
+NeueGal will generate and cache thumbnails into a cache folder within your photos directory. If you want more control, you can create your own thumbnail and upload it into the `custom thumbnails` directory within your gallery. For example, if you wanted to create a thumbnail for `mygallery/nested folder/flower.png` you would create a thumbnail at `mygallery/custom thumbnails/nested folder/flower.png`.
 
 Settings
 ------

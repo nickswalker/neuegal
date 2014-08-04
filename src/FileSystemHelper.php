@@ -47,7 +47,7 @@ class FileSystemHelper{
 				else if (
 					is_file($pathFromRoot . $item)
 					&& !FileSystemHelper::isInList($item, $fileBlacklist)
-					&& FileSystemHelper::isInList(pathinfo($item)['extension'], $fileTypes)
+					&& FileSystemHelper::isInList(pathinfoExtension($item), $fileTypes)
 					) {
 
 						$files[] = array(
@@ -120,8 +120,8 @@ class FileSystemHelper{
 	}
 	static function getImageDescription($path) {
 		
-		$imageName = pathinfo($path)['filename'];
-		$imageDirectory = normalizePath(pathinfo($path)['dirname']);
+		$imageName = pathinfoFilename($path);
+		$imageDirectory = normalizePath(pathinfoDirname($path));
 		$possibleDescriptionPath =  $imageDirectory . $imageName . '.txt';
 		if( is_file($possibleDescriptionPath) ){
 			return file_get_contents($possibleDescriptionPath);

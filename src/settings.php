@@ -14,12 +14,13 @@ $folderFormat = '
 </li>';
 
 return array(
+
 /* General */
+
 	'site_name' => 'NeueGal',
-	'thumbnail_size' => 300, //In pixels. Should usually be set by the theme
+	'thumbnail_size' => 300, //Thumbnail will have a smallest side length of this value. Should usually be set by the theme
 	'folder_thumbnails' => true,
 	'random_folder_thumbnail' => false,
-
 
 /* Theme*/
 
@@ -29,11 +30,10 @@ return array(
 		),
 
 /* Advanced */
-	'advanced' => array(
-		'debug' => false,
-		'jpeg_quality' => 90,
-		'cache_expire' => 86400,
-		'custom_thumbnails_path' => 'thumbs'
-	)
 
+	'advanced' => array(
+		'debug' => false, //Var dumps import variables on page load
+		'jpeg_quality' => 90,
+		'cache_expire' => 86400 //seconds
+	)
 );

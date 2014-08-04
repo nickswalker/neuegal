@@ -14,7 +14,9 @@ $folderFormat = <<<EOD
 EOD;
 
 return array(
+
 /* General */
+
 	'site_name' => 'My Gallery',
 	'thumb_size'=> 300,
 	'thumb_folder_show_thumbs' => true,
@@ -31,5 +33,4 @@ return array(
 		'debug' => false,
 		'jpeg_quality' => 90
 	)
-
 );

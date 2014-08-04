@@ -125,7 +125,7 @@ class NeueGal{
 		
 		$replace = array(
 			$this->settings['thumbnail_size'] . 'px',
-			pathinfo($image['name'])['filename'],
+			pathinfoFilename($image['name']),
 			$this->getURLFromPath($image['path']),
 			$this->getThumbnailURL($image['path']),
 			$image['description']
@@ -176,8 +176,8 @@ class NeueGal{
 		}
 		$directory = normalizePath("$directory");
 		
-		$fileName = pathinfo($path)['filename'];
-		$fileExtension = pathinfo($path)['extension'];
+		$fileName = pathinfoFilename($path);
+		$fileExtension = pathinfoExtension($path);
 		$possibleCachedFilePathFromRoot =  $this->photosPathFromRoot . 'cache/' . $directory . $fileName . '_' . $this->settings['thumbnail_size'] . '.' . $fileExtension;
 		$possibleCachedFileURL = $this->getURLFromPath($possibleCachedFilePathFromRoot);
 
@@ -186,7 +186,7 @@ class NeueGal{
 		$originalimagepath = $path;
 		
 		if ( is_file($possibleCustomThumbPath) ){
-			return $possibleCustomThumbPath;
+			return $this->getURLFromPath($possibleCustomThumbPath);
 		}
 		else if ( is_file($possibleCachedFilePathFromRoot) ){
 			return $possibleCachedFileURL;
@@ -202,9 +202,9 @@ class NeueGal{
 	function generateThumbnail($originalImagePathFromRoot){	
 		$imageGalleryRelative = $this->getGalleryRelativeURLFromPath($originalImagePathFromRoot);
 		
-		$filename = pathinfo($imageGalleryRelative)['filename'];
-		$fileExtension = pathinfo($imageGalleryRelative)['extension'];
-		$directory = pathinfo($imageGalleryRelative)['dirname'];
+		$filename = pathinfoFilename($imageGalleryRelative);
+		$fileExtension = pathinfoExtension($imageGalleryRelative);
+		$directory = pathinfoDirname($imageGalleryRelative);
 		
 		if($directory === "."){
 			$directory = "";
@@ -396,4 +396,17 @@ function normalizePath($path) {
 	} else {
 		return $path;
 	}
+}
+//Polyfill until PHP5.4 and anonymous array subscripting
+function pathinfoExtension($path){
+	$pathinfo = pathinfo($path);
+	return $pathinfo['extension'];
+}
+function pathinfoFilename($path){
+	$pathinfo = pathinfo($path);
+	return $pathinfo['filename'];
+}
+function pathinfoDirname($path){
+	$pathinfo = pathinfo($path);
+	return $pathinfo['dirname'];
 }
