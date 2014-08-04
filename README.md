@@ -1,7 +1,7 @@
 NeueGal
 =======
 
-<img src="example.png" title="Example gallery using the default theme." />
+<img src="example.jpg" title="Example gallery using the default theme." />
 
 A simple, no-database, PHP image gallery. Lightweight and lighting fast. See a live demo [here](http://ineswalker.com/).
 
@@ -116,7 +116,6 @@ The `template.php` in your theme's folder is where you can change the page as a 
 ````
 
 Look to the default theme's template for an example of how to create a cohesive structure with this information.
->>>>>>> develop
 
 Issues
 ------
