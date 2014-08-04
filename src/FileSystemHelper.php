@@ -54,8 +54,8 @@ class FileSystemHelper{
 							'path'=>$pathFromRoot . $item,
 							'name'=>$item,
 							'data'=>array(
-								'width' => getimagesize($pathFromRoot . $item)[0],
-								'height' => getimagesize($pathFromRoot . $item)[1]
+								'width' => getimagesizeWidth($pathFromRoot . $item),
+								'height' => getimagesizeHeight($pathFromRoot . $item)
 							),
 							'description'=> FileSystemHelper::getImageDescription($pathFromRoot.$item)
 						);
@@ -202,4 +202,12 @@ class FileSystemHelper{
 		}
 		return false;
 	}
+}
+function getimagesizeWidth($path){
+	$imagesize = getimagesize($path);
+	return $imagesize[0];
+}
+function getimagesizeHeight($path){
+	$imagesize = getimagesize($path);
+	return $imagesize[1];
 }
