@@ -75,13 +75,12 @@ class FileSystemHelper{
 	function getDirectoryDataFromCache($cacheFilePath){
 			
 		if ( is_file($cacheFilePath) ) {
-			if (  ( time() - filemtime($cacheFilePath) ) < 100000 ) {
 				$xml = new \SimpleXMLElement(file_get_contents($cacheFilePath));
 				
 				$files = FileSystemHelper::pullImagesFromXML($xml);
 				$directories = FileSystemHelper::pullFoldersFromXML($xml);
-			}
 		}
+		
 		$output['file'] = $files;
 		$output['dir'] = $directories;
 		

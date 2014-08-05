@@ -70,7 +70,7 @@ class NeueGal{
 		$pathFromGallery = $this->getGalleryRelativeURLFromPath($path);
 
 		$currentCacheFileFromRoot = $this->photosPathFromRoot . 'cache/' . $pathFromGallery . 'cache.xml';
-		if (is_file($currentCacheFileFromRoot)){
+		if ( is_file($currentCacheFileFromRoot) && ( (time() - filemtime($currentCacheFileFromRoot) ) < $this->settings['advanced']['cache_expire']) ){
 			$directoryData = $this->fileSystemHelper->getDirectoryDataFromCache($currentCacheFileFromRoot);
 		}	
 		else {
@@ -222,6 +222,7 @@ class NeueGal{
 				break;
 			case 'png':
 				$image = imagecreatefrompng($originalImagePathFromRoot);
+				$format = "png";
 				break;
 		}
 		
