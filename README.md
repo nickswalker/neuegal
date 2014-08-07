@@ -3,7 +3,7 @@ NeueGal
 
 <img src="example.jpg" title="Example gallery using the default theme." />
 
-A simple, no-database, PHP image gallery. Lightweight and lighting fast. See a live demo [here](http://ineswalker.com/).
+A simple, no-database, PHP image gallery. Lightweight and lighting fast. See an installation live [here](http://nickwalker.us/work) and a custom themed one [here](http://ineswalker.com/).
 
 Features:
 * Upload over FTP. No convoluted admin interface.
