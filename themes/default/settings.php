@@ -2,13 +2,13 @@
 
 $imageFormat = <<<EOD
 <li>
-	<a title="{{Title}}" data-description="{{Description}}" href="{{Path}}" style="background-image:url('{{ThumbPath}}');">
+	<a title="{{Title}}" data-description="{{Description}}" href="{{Path}}" data-fancybox-group="gallery" style="background-image:url('{{ThumbPath}}');">
 	</a>
 </li>
 EOD;
 $folderFormat = <<<EOD
 <li class="folder">
-	<a href="{{Path}}" style="background-image:url('{{ThumbPath}}');">
+	<a href="{{Path}}" data-fancybox-group="gallery" style="background-image:url('{{ThumbPath}}');">
 	</a>
 </li>
 EOD;
