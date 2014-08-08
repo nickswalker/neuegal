@@ -2,6 +2,7 @@
 <html>
 <head>
 	<meta charset= "UTF-8">
+	<meta name=viewport content="width=device-width, initial-scale=1">
 	<title><?php if($vars['current_folder_name']!=''){ 
 				echo $vars['current_folder_name'] . ' | '. $settings['site_name'];
 				} 
