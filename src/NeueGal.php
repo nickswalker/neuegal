@@ -266,7 +266,6 @@ class NeueGal{
 				imagejpeg($image, $path, $this->settings['advanced']['jpeg_quality']);
 				break;
 			case 'png':
-				header('Content-type: image/png');
 				imagepng($image, $path);
 				break;
 		}	
