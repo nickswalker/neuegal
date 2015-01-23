@@ -121,7 +121,7 @@ header h1 a{
 	-webkit-flex-flow: row wrap;
 	flex-flow: row wrap;
 	-webkit-justify-content: flex-start;
-	justify-content: space-around;
+	justify-content: space-start;
 }
 .gallery li	{
 	display: inline-block;
@@ -137,6 +137,7 @@ header h1 a{
 	background-color: #666;
 	display: block;
 	background-size: cover;
+	background-repeat: no-repeat;
 	height: 33.33vw;
 	width: 33.33vw;
 }

@@ -1,9 +1,9 @@
 NeueGal
 =======
 
-<img src="example.png" title="Example gallery using the default theme." />
+<img src="example.jpg" title="Example gallery using the default theme." />
 
-A simple, no-database, PHP image gallery. Lightweight and lighting fast. See a live demo [here](http://ineswalker.com/).
+A simple, no-database, PHP image gallery. Lightweight and lighting fast. See an installation live [here](http://nickwalker.us/work) and a custom themed one [here](http://ineswalker.com/).
 
 Features:
 * Upload over FTP. No convoluted admin interface.
@@ -15,6 +15,7 @@ Features:
 * Autogenerate thumbnails, or use your own custom ones (or do both at the same time)
 * Fully themable...
 * Or just tweakable with simple custom CSS
+
 
 Installation
 ------
@@ -50,11 +51,13 @@ If you don't enjoy the included gallery of flower photos (from yours truly ;) ),
 to display them just like you'd imagine. Note however that directory information is cached and you may have to delete the
 cache folder within your photos directory to get the server to update immediately.
 
+
 ###Adding Descriptions
 Image descriptions are dynamically retrieved from a `.txt` file in your photos directory. So, to add a description to `flower.jpg`, you would create `flower.txt` in the same directory that the photo is stored in. Folder descriptions are dynamically retrieved from a `description.txt` file in a given directory.
 
+
 ###Overiding Dynamically Generated Thumbnails
-NeueGal will generate and cache thumbnails into a cache folder within your photos directory. If you want more control, you can create your own thumbnail and upload it into the `custom-thumbnails` directory within your gallery. For example, if you wanted to create a thumbnail for `mygallery/nested folder/flower.png` you would create a thumbnail at `mygallery/custom thumnails/nested folder/flower.png`.
+NeueGal will generate and cache thumbnails into a cache folder within your photos directory. If you want more control, you can create your own thumbnail and upload it into the `custom thumbnails` directory within your gallery. For example, if you wanted to create a thumbnail for `mygallery/nested folder/flower.png` you would create a thumbnail at `mygallery/custom thumbnails/nested folder/flower.png`.
 
 Settings
 ------

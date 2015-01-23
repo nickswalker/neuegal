@@ -47,15 +47,15 @@ class FileSystemHelper{
 				else if (
 					is_file($pathFromRoot . $item)
 					&& !FileSystemHelper::isInList($item, $fileBlacklist)
-					&& FileSystemHelper::isInList(pathinfo($item)['extension'], $fileTypes)
+					&& FileSystemHelper::isInList(pathinfoExtension($item), $fileTypes)
 					) {
 
 						$files[] = array(
 							'path'=>$pathFromRoot . $item,
 							'name'=>$item,
 							'data'=>array(
-								'width' => getimagesize($pathFromRoot . $item)[0],
-								'height' => getimagesize($pathFromRoot . $item)[1]
+								'width' => getimagesizeWidth($pathFromRoot . $item),
+								'height' => getimagesizeHeight($pathFromRoot . $item)
 							),
 							'description'=> FileSystemHelper::getImageDescription($pathFromRoot.$item)
 						);
@@ -75,13 +75,12 @@ class FileSystemHelper{
 	function getDirectoryDataFromCache($cacheFilePath){
 			
 		if ( is_file($cacheFilePath) ) {
-			if (  ( time() - filemtime($cacheFilePath) ) < 100000 ) {
 				$xml = new \SimpleXMLElement(file_get_contents($cacheFilePath));
 				
 				$files = FileSystemHelper::pullImagesFromXML($xml);
 				$directories = FileSystemHelper::pullFoldersFromXML($xml);
-			}
 		}
+		
 		$output['file'] = $files;
 		$output['dir'] = $directories;
 		
@@ -120,8 +119,8 @@ class FileSystemHelper{
 	}
 	static function getImageDescription($path) {
 		
-		$imageName = pathinfo($path)['filename'];
-		$imageDirectory = normalizePath(pathinfo($path)['dirname']);
+		$imageName = pathinfoFilename($path);
+		$imageDirectory = normalizePath(pathinfoDirname($path));
 		$possibleDescriptionPath =  $imageDirectory . $imageName . '.txt';
 		if( is_file($possibleDescriptionPath) ){
 			return file_get_contents($possibleDescriptionPath);
@@ -202,4 +201,12 @@ class FileSystemHelper{
 		}
 		return false;
 	}
+}
+function getimagesizeWidth($path){
+	$imagesize = getimagesize($path);
+	return $imagesize[0];
+}
+function getimagesizeHeight($path){
+	$imagesize = getimagesize($path);
+	return $imagesize[1];
 }
