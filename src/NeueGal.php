@@ -70,8 +70,7 @@ class NeueGal{
 		$pathFromGallery = $this->getGalleryRelativeURLFromPath($path);
 
 		$currentCacheFileFromRoot = $this->photosPathFromRoot . 'cache' . DIRECTORY_SEPARATOR . $pathFromGallery . 'cache.xml';
-		$expired = $this->isCacheExpired($currentCacheFileFromRoot);
-		if ( is_file($currentCacheFileFromRoot) && !$expired ){
+		if ( is_file($currentCacheFileFromRoot) && !$this->isCacheExpired($currentCacheFileFromRoot) ){
 			$directoryData = $this->fileSystemHelper->getDirectoryDataFromCache($currentCacheFileFromRoot);
 		}
 		else {
