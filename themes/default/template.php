@@ -3,18 +3,18 @@
 <head>
 	<meta charset= "UTF-8">
 	<meta name=viewport content="width=device-width, initial-scale=1">
-	<title><?php if($vars['current_folder_name']!=''){ 
+	<title><?php if($vars['current_folder_name']!=''){
 				echo $vars['current_folder_name'] . ' | '. $settings['site_name'];
-				} 
-			else{ 
+				}
+			else{
 				echo $settings['site_name'];
 				} ?></title>
 	<link href='http://fonts.googleapis.com/css?family=Open+Sans:300,300italic,700' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css" />
 	<?php if( is_file($this->photosPathFromRoot.'custom-style.css') ){
-		echo '<link rel="stylesheet"  href="/'. str_replace($this->publicPathFromRoot, '', $this->photosPathFromRoot). '/custom-style.css" media="all" />';
+		echo '<link rel="stylesheet"  href="'.  DIRECTORY_SEPARATOR . str_replace($this->publicPathFromRoot, '', $this->photosPathFromRoot).  DIRECTORY_SEPARATOR . 'custom-style.css" media="all" />';
 	}?>
-	
+
 	<link rel="stylesheet"  href="<?php echo $this->getThemeURL();?>style.css" media="all" />
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.js"></script>
@@ -36,7 +36,7 @@
 				nextEffect: 'fade',
 				loop: false,
 				closeBtn: false,
-				    
+
 			});
 		});
 	</script>
